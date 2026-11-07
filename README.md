@@ -80,7 +80,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--route);outline-
 .fab{width:52px;height:52px;border-radius:50%;background:var(--panel);box-shadow:var(--shadow);display:grid;place-items:center;color:var(--ink)}
 .fab svg{width:24px;height:24px}
 .compass{width:60px;height:60px;position:relative;flex-direction:column}
-.compass .rose{width:46px;height:46px;transition:transform .15s linear}
+.compass .rose{width:46px;height:46px;will-change:transform}
 .compass .rose .n{fill:var(--danger)} .compass .rose .s{fill:var(--muted)}
 .compass .rose .ring{fill:none;stroke:var(--line);stroke-width:2}
 .compass .rose text{font:800 7px var(--font);fill:var(--ink);text-anchor:middle}
@@ -156,7 +156,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--route);outline-
 
 /* Map markers */
 .car{background:none;border:0}
-.car-rot{width:44px;height:44px;transition:transform .4s linear}
+.car-rot{width:44px;height:44px;will-change:transform}
 .car svg{width:100%;height:100%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 .car .halo{fill:var(--route);opacity:.18}
 .car .arrow{fill:var(--route);stroke:#fff;stroke-width:2.5;stroke-linejoin:round}
@@ -446,35 +446,58 @@ function drawCar(){
   carMarker.setLatLng(S.pos); accCircle.setLatLng(S.pos).setRadius(Math.min(S.acc || 10, 500));
   rotateCar();
 }
-let carRot = 0;
+/* ---------- heading animation: one rAF loop, frame-rate independent ---------- */
+// Sensor readings are applied as targets; each frame eases toward them with an exponential
+// time constant. Compass uses ~45 ms (feels instant, no jitter); GPS course uses ~300 ms.
+let carRot = 0, roseRot = 0, animRun = false, animLast = 0, txtLast = 0;
+const wrap = d => ((d % 360) + 540) % 360 - 180;            // shortest signed angle
+const compassDriving = () => CMP.on && CMP.raw != null && S.speed < CMP_SPEED;
+function kickAnim(){ if (!animRun){ animRun = true; animLast = performance.now(); requestAnimationFrame(animFrame); } }
 function rotateCar(){
-  const root = carMarker?.getElement(); if (!root) return;
-  carRot += ((S.heading - carRot + 540) % 360) - 180;   // shortest path, no 359→0 spin
-  root.querySelector('.car-rot').style.transform = `rotate(${carRot}deg)`;
-  root.classList.toggle('compass-on', CMP.on && CMP.hdg != null && S.speed < CMP_SPEED);
+  const root = carMarker?.getElement();
+  if (root) root.classList.toggle('compass-on', compassDriving());
+  kickAnim();
+}
+function animFrame(t){
+  const dt = Math.min(.1, Math.max(0, (t - animLast) / 1000)); animLast = t;
+  let busy = false;
+  const carEl = carMarker?.getElement()?.querySelector('.car-rot');
+  if (carEl){
+    const d = wrap(S.heading - carRot);
+    if (Math.abs(d) > .05){
+      carRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / (compassDriving() ? .045 : .3)));
+      busy = true;
+    }
+    carEl.style.transform = `rotate(${carRot.toFixed(2)}deg)`;
+  }
+  if (CMP.on && CMP.raw != null){
+    const d = wrap(-CMP.raw - roseRot);
+    if (Math.abs(d) > .05){ roseRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / .045)); busy = true; }
+    roseEl.style.transform = `rotate(${roseRot.toFixed(2)}deg)`;
+    if (t - txtLast > 120){ txtLast = t; const h = (CMP.raw + 360) % 360;
+      cmpTxt.textContent = CARD16[Math.round(h / 22.5) % 16] + ' ' + Math.round(h) % 360 + '°'; }
+  }
+  if (busy || CMP.on) requestAnimationFrame(animFrame); else animRun = false;
 }
 
 /* ---------- live compass (device orientation) ---------- */
-const CMP = { on:false, hdg:null, got:false, raf:0 }, CMP_SPEED = 2.5; // below ~5.5 mph, trust the compass over GPS course
+const CMP = { on:false, raw:null, got:false }, CMP_SPEED = 2.5; // below ~5.5 mph, trust the compass over GPS course
 const CARD16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-let roseRot = 0;
+const roseEl = $('#btnCompass .rose'), cmpTxt = $('#cmpTxt');
+let scrAngle = screen.orientation?.angle ?? window.orientation ?? 0;
+screen.orientation?.addEventListener?.('change', () => { scrAngle = screen.orientation.angle; });
+window.addEventListener('orientationchange', () => { scrAngle = screen.orientation?.angle ?? window.orientation ?? 0; });
 function onOrient(e){
   let h = null;
-  if (typeof e.webkitCompassHeading === 'number' && e.webkitCompassHeading >= 0) h = e.webkitCompassHeading;   // iOS: already true-ish heading
+  if (typeof e.webkitCompassHeading === 'number' && e.webkitCompassHeading >= 0) h = e.webkitCompassHeading;   // iOS
   else if ((e.absolute || e.type === 'deviceorientationabsolute') && e.alpha != null) h = 360 - e.alpha;      // Android: alpha is CCW from north
   if (h == null) return;
-  h = (h + (screen.orientation?.angle ?? window.orientation ?? 0) + 360) % 360;
+  h = (h + scrAngle + 360) % 360;
   CMP.got = true;
-  CMP.hdg = CMP.hdg == null ? h : (CMP.hdg + (((h - CMP.hdg + 540) % 360) - 180) * .25 + 360) % 360;  // circular low-pass
-  if (!CMP.raf) CMP.raf = requestAnimationFrame(renderCompass);
-}
-function renderCompass(){
-  CMP.raf = 0; if (!CMP.on || CMP.hdg == null) return;
-  const h = CMP.hdg;
-  roseRot += ((-h - roseRot + 540) % 360) - 180;
-  $('#btnCompass .rose').style.transform = `rotate(${roseRot}deg)`;
-  $('#cmpTxt').textContent = CARD16[Math.round(h / 22.5) % 16] + ' ' + Math.round(h) + '°';
-  if (S.speed < CMP_SPEED){ S.heading = h; rotateCar(); }
+  // Continuous (unwrapped) target so the animation never takes the long way round.
+  CMP.raw = CMP.raw == null ? h : CMP.raw + wrap(h - CMP.raw);
+  if (S.speed < CMP_SPEED) S.heading = (CMP.raw % 360 + 360) % 360;
+  kickAnim();
 }
 async function compassOn(){
   try{
@@ -483,18 +506,19 @@ async function compassOn(){
     }
   }catch{ toast('Compass access needs a tap on the compass button.'); return; }
   if (!('DeviceOrientationEvent' in window)){ toast('This device has no compass sensor.'); return; }
-  CMP.on = true; CMP.got = false; CMP.hdg = null;
+  CMP.on = true; CMP.got = false; CMP.raw = null;
   window.addEventListener('ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation', onOrient);
   const b = $('#btnCompass'); b.classList.remove('off'); b.setAttribute('aria-label', 'Turn off live compass');
-  $('#cmpTxt').textContent = '…';
+  cmpTxt.textContent = '…';
   store.set('compass', true);
+  kickAnim();
   setTimeout(() => { if (CMP.on && !CMP.got){ toast('No compass reading. This device may lack a magnetometer.'); compassOff(); } }, 3000);
 }
 function compassOff(){
-  CMP.on = false; CMP.hdg = null;
+  CMP.on = false; CMP.raw = null;
   window.removeEventListener('deviceorientationabsolute', onOrient); window.removeEventListener('deviceorientation', onOrient);
   const b = $('#btnCompass'); b.classList.add('off'); b.setAttribute('aria-label', 'Turn on live compass');
-  roseRot = 0; $('#btnCompass .rose').style.transform = ''; $('#cmpTxt').textContent = 'Compass';
+  roseRot = 0; roseEl.style.transform = ''; cmpTxt.textContent = 'Compass';
   store.set('compass', false); rotateCar();
 }
 $('#btnCompass').onclick = () => CMP.on ? compassOff() : compassOn();
@@ -504,7 +528,7 @@ function onPosition(c){
   if (prev){
     const d = dist(prev, ll);
     if (spd == null && S.lastFix) spd = d / Math.max(.5, (now - S.lastFix)/1000);
-    if (d > 2 && !(CMP.on && CMP.hdg != null && (spd || 0) < CMP_SPEED)) S.heading =(typeof c.heading === 'number' && !isNaN(c.heading) && (spd||0) > 1) ? c.heading : bearing(prev, ll);
+    if (d > 2 && !(CMP.on && CMP.raw != null && (spd || 0) < CMP_SPEED)) S.heading =(typeof c.heading === 'number' && !isNaN(c.heading) && (spd||0) > 1) ? c.heading : bearing(prev, ll);
   }
   S.pos = ll; S.acc = c.accuracy; S.speed = spd || 0; S.lastFix = now;
   S.alt = (typeof c.altitude === 'number' && !isNaN(c.altitude)) ? c.altitude : null;
@@ -717,17 +741,35 @@ function fitRoutes(){
   map.fitBounds(b, { paddingTopLeft:[30, $('#top').offsetHeight + 30], paddingBottomRight:[30, sheet.offsetHeight + 30] });
 }
 
-/* long-press to drop a pin */
-let lpT = null, lpStart = null, lpFired = 0;
+/* long-press to drop a pin: one finger only, cancelled by any pinch/zoom/drag */
+let lpT = null, lpStart = null, lpFired = 0, lpMultiAt = 0, lpType = 'mouse';
+const ptrs = new Set();
 const mapEl = map.getContainer();
+const lpCancel = () => { clearTimeout(lpT); lpT = null; };
 mapEl.addEventListener('pointerdown', e => {
+  ptrs.add(e.pointerId); lpType = e.pointerType;
+  if (ptrs.size > 1){ lpMultiAt = Date.now(); return lpCancel(); }
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   lpStart = [e.clientX, e.clientY];
-  lpT = setTimeout(() => { lpFired = Date.now(); dropPin(map.mouseEventToLatLng(e)); }, 600);
+  const ll = map.mouseEventToLatLng(e);
+  lpCancel();
+  lpT = setTimeout(() => {
+    lpT = null;
+    if (ptrs.size !== 1 || Date.now() - lpMultiAt < 800) return;
+    lpFired = Date.now(); navigator.vibrate?.(15); dropPin(ll);
+  }, 600);
+}, true);
+['pointerup','pointercancel'].forEach(t => mapEl.addEventListener(t, e => { ptrs.delete(e.pointerId); if (ptrs.size) lpMultiAt = Date.now(); lpCancel(); }, true));
+mapEl.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse'){ ptrs.delete(e.pointerId); lpCancel(); } }, true);
+mapEl.addEventListener('touchstart', e => { if (e.touches.length > 1){ lpMultiAt = Date.now(); lpCancel(); } }, { capture:true, passive:true });
+mapEl.addEventListener('pointermove', e => { if (lpT && lpStart && Math.hypot(e.clientX - lpStart[0], e.clientY - lpStart[1]) > 10) lpCancel(); }, true);
+map.on('zoomstart dragstart', lpCancel);
+// Right-click on desktop only; touch long-press is handled above (browsers also fire contextmenu for touch holds and two-finger taps).
+map.on('contextmenu', e => {
+  const oe = e.originalEvent;
+  if ((oe?.pointerType && oe.pointerType !== 'mouse') || lpType !== 'mouse' || oe?.sourceCapabilities?.firesTouchEvents) return;
+  if (Date.now() - lpFired > 1000 && Date.now() - lpMultiAt > 1000) dropPin(e.latlng);
 });
-['pointerup','pointercancel','pointerleave'].forEach(t => mapEl.addEventListener(t, () => clearTimeout(lpT)));
-mapEl.addEventListener('pointermove', e => { if (lpStart && Math.hypot(e.clientX - lpStart[0], e.clientY - lpStart[1]) > 10) clearTimeout(lpT); });
-map.on('contextmenu', e => { if (Date.now() - lpFired > 1000) dropPin(e.latlng); });
 function dropPin(ll){
   if (S.nav) return;
   if (PLACE){ PLACE.m.setLatLng(ll); plSub(); return; }
