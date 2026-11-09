@@ -191,17 +191,34 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 .btn:disabled{opacity:.45;cursor:default}
 
 /* Legend + recording pill */
-#legend{display:flex;align-items:center;gap:5px;flex-wrap:wrap;background:var(--panel);border-radius:12px;box-shadow:var(--shadow);padding:7px 10px;font:700 11px var(--font)}
+#legend{display:flex;flex-direction:column;align-items:stretch;gap:6px;background:var(--panel);border-radius:12px;box-shadow:var(--shadow);padding:7px 10px;font:700 11px var(--font)}
 #legend .lg-t{font:800 10px var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 #legend .lg{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:6px;background:var(--panel-2);font-variant-numeric:tabular-nums}
 #legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
 #legend i.dash{background:repeating-linear-gradient(90deg,var(--c) 0 3px,transparent 3px 6px)}
-#legend .lg-status{flex-basis:100%;color:var(--muted);font-weight:600}
+#legend .lg-status{color:var(--muted);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#legend .lg-head{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;min-height:22px}
+#legend .lg-car{margin-left:auto;flex:none;color:var(--route);font-weight:700}
+#legend .lg-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+#legend .lg-k{font:800 9.5px var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);width:72px}
+.subs{margin-left:4px;padding-left:14px;border-left:3px solid var(--line)}
+.subs .tg b{font-weight:600}
 #legend .lg-status.busy::before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;border:2px solid var(--route);border-right-color:transparent;animation:spin .8s linear infinite;vertical-align:-1px}
 @keyframes spin{to{transform:rotate(360deg)}}
 #recPill{align-self:center;display:inline-flex;align-items:center;gap:8px;background:var(--danger);color:#fff;border-radius:999px;padding:8px 16px;font:700 13px var(--mono);box-shadow:var(--shadow);font-variant-numeric:tabular-nums;white-space:pre}
 #recPill::before{content:"";width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.25}}
+
+#tkey{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel);border-radius:12px;box-shadow:var(--shadow);padding:6px 10px;font:700 11px var(--font)}
+#tkey .lg-t{font:800 10px var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+#tkey .tk{display:inline-flex;align-items:center;gap:4px}
+#tkey i{width:14px;height:5px;border-radius:3px;display:inline-block}
+.keyrow{display:flex;flex-direction:column;gap:6px;padding:10px 0}
+.keyrow label{font-weight:700}
+.keyin{display:flex;gap:8px}
+.keyin input{flex:1;min-width:0;height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);padding:0 12px;font:600 14px var(--mono)}
+.keyin .btn{height:44px;padding:0 18px}
+.keyrow small{color:var(--muted);font-size:12px;line-height:1.45}
 
 /* Elevation chip */
 .alt{background:var(--panel);box-shadow:var(--shadow);border-radius:10px;padding:5px 9px;text-align:center;line-height:1.15;margin-bottom:4px}
@@ -244,6 +261,68 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 .pop dt{color:var(--muted)} .pop dd{margin:0;font-weight:600}
 .pop button.go{color:var(--route);margin-top:10px}
 
+/* Lanes */
+.b-lanes{display:flex;gap:2px;margin-top:10px;padding:4px 6px;border-radius:10px;background:rgba(0,0,0,.24);width:max-content;max-width:100%;overflow:hidden}
+.lane{width:24px;height:32px;opacity:.38;display:grid;place-items:center}
+.lane+.lane{border-left:1.5px dashed rgba(255,255,255,.45)}
+.lane svg{width:20px;height:28px}
+.lane.on{opacity:1}
+
+/* Nav bar controls */
+.trip-btn{display:flex;align-items:center;gap:14px;text-align:left;padding:4px 6px;margin-left:-6px;border-radius:12px}
+.trip-btn:hover{background:var(--panel-2)}
+.nb-ico{width:44px;height:44px;border-radius:12px;background:var(--panel-2);display:grid;place-items:center;flex:none}
+.nb-ico svg{width:22px;height:22px}
+.nb-ico.off{color:var(--danger)}
+#btnEnd{padding:0 18px}
+.trip-head{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
+.trip-head div{display:flex;flex-direction:column}
+.trip-head b{font:700 26px/1.05 var(--mono);font-variant-numeric:tabular-nums}
+.trip-head div:first-child b{color:var(--guide)}
+.trip-head span{font:600 12px var(--font);color:var(--muted)}
+.delay{font:800 12px var(--font);letter-spacing:.02em}
+.delay.bad{color:var(--danger)} .delay.ok{color:var(--guide)}
+.route-opt small.delay{grid-column:1/-1}
+.steps{list-style:none;margin:0;padding:0}
+.st{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.st:last-child{border-bottom:0}
+.st-ico{width:30px;height:30px;flex:none;color:var(--guide);display:grid;place-items:center}
+.st-ico svg{width:28px;height:28px}
+.st .row-txt b{white-space:normal;font-weight:600}
+.share-txt{width:100%;min-height:96px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);padding:10px;font:500 14px var(--font);resize:vertical}
+
+/* Search mic */
+#micBtn.listening{color:#fff;background:var(--danger);animation:pulse2 1.2s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--danger) 30%,transparent)}}
+
+/* Weather */
+.wxchip{display:flex;align-items:center;gap:5px;background:var(--panel);box-shadow:var(--shadow);border-radius:10px;padding:5px 9px;margin-bottom:4px;pointer-events:auto;color:var(--ink)}
+.wxchip svg{width:20px;height:20px;color:var(--muted)}
+.wxchip b{font:700 15px var(--mono);font-variant-numeric:tabular-nums}
+.wxchip span{font:800 9px var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.wxchip em{font:700 11px var(--mono);font-style:normal;color:var(--route);margin-left:2px;font-variant-numeric:tabular-nums}
+#wxAlert{display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:12px;box-shadow:var(--shadow),inset 4px 0 0 var(--wc);padding:9px 12px 9px 14px;text-align:left;font-size:13px;color:var(--ink)}
+#wxAlert i{width:12px;height:12px;border-radius:50%;background:var(--wc);flex:none;animation:blink 1s infinite}
+#wxAlert b{font-weight:800}
+.wx-route{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--panel-2)}
+.wx-route i{width:12px;height:12px;border-radius:50%;flex:none}
+.wx-route span{display:flex;flex-direction:column;min-width:0}
+.wx-route small{color:var(--muted)}
+.pv-wx{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pv-wx:empty{display:none}
+.pvw-i{width:34px;height:34px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;flex:none;color:var(--muted)}
+.pvw-i svg{width:22px;height:22px}
+.pv-wx span:last-child{display:flex;flex-direction:column}
+.pv-wx small{color:var(--muted)}
+.wx-head{margin:8px 0 6px;font-weight:600;font-size:13px}
+.wx-desc{max-height:140px;overflow:auto;white-space:pre-wrap;font-size:12px;line-height:1.45;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:8px}
+.wx-ins{margin-top:6px;color:var(--ink)}
+
+/* Parking */
+.park div{width:32px;height:32px;border-radius:8px;background:#2557c9;color:#fff;display:grid;place-items:center;font:800 18px var(--font);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.park-badge{width:30px;height:30px;border-radius:8px;background:#2557c9;color:#fff;display:grid;place-items:center;font:800 16px var(--font);flex:none}
+.chev{font-size:24px;color:var(--muted);flex:none}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -258,14 +337,18 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg>
     <input id="q" type="search" placeholder="Where to?" autocomplete="off" enterkeyhint="search" aria-label="Search for a destination">
     <button id="clearQ" class="icon-btn" aria-label="Clear search" hidden>×</button>
+    <button id="micBtn" class="icon-btn" aria-label="Search by voice" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
   </div>
   <div id="banner" hidden aria-live="polite">
     <div class="b-main">
       <div id="bIcon" class="b-icon"></div>
       <div class="b-text"><div id="bDist" class="b-dist"></div><div id="bStreet" class="b-street"></div></div>
     </div>
+    <div id="bLanes" class="b-lanes" hidden></div>
     <div id="bThen" class="b-then" hidden></div>
   </div>
+  <button id="wxAlert" hidden></button>
+  <div id="tkey" hidden></div>
   <div id="legend" hidden></div>
   <button id="recPill" hidden aria-label="Stop recording"></button>
 </header>
@@ -274,6 +357,7 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
   <div id="limit" class="limit" hidden><span>SPEED<br>LIMIT</span><b id="limitVal">35</b></div>
   <div id="speedo" class="speedo"><b id="spd">0</b><span id="spdU">mph</span></div>
   <div id="alt" class="alt" hidden><span>Elev</span><b id="altVal"></b></div>
+  <button id="wx" class="wxchip" hidden aria-label="Current weather"></button>
 </div>
 
 <div id="fabs">
@@ -291,11 +375,15 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 <section id="sheet" class="sheet"></section>
 
 <section id="navbar" class="sheet" hidden>
-  <div id="navbarInner" style="display:flex;align-items:center;gap:16px">
-    <div class="nb-cell eta"><b id="eta">--:--</b><span>arrival</span></div>
-    <div class="nb-cell"><b id="remT">--</b><span id="remD">--</span></div>
+  <div id="navbarInner" style="display:flex;align-items:center;gap:10px">
+    <button id="tripBtn" class="trip-btn" aria-label="Trip details">
+      <span class="nb-cell eta"><b id="eta">--:--</b><span>arrival</span></span>
+      <span class="nb-cell"><b id="remT">--</b><span id="remD">--</span></span>
+    </button>
     <div class="nb-spacer"></div>
     <button id="btnSim" class="pill" hidden aria-label="Simulation speed">×1</button>
+    <button id="btnMute" class="nb-ico" aria-label="Mute voice"></button>
+    <button id="btnOverview" class="nb-ico" aria-label="Route overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
     <button id="btnEnd">End</button>
   </div>
 </section>
@@ -329,7 +417,9 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 
 /* ---------- settings & theme ---------- */
 const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', base:'street',
-  ovOffroad:true, ovHike:false, ovMtb:false, ovReports:true }, store.get('settings', {}));
+  ovOffroad:true, ovHike:false, ovMtb:false, ovReports:true,
+  srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
+  trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 const mq = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches);
@@ -535,6 +625,7 @@ function onPosition(c){
   drawCar(); updateSpeedo(); updateAlt(); checkReports(); maybeSpeedLimit();
   if (REC.on && (S.sim || (c.accuracy || 0) <= 50)) recPoint(ll, S.alt);
   if (PLACE) plSub();
+  checkWx(); refreshConditions();
   if (S.nav) navTick();
   if (!S.firstFix){ S.firstFix = true; if (!S.nav && !S.dest) map.setView(ll, 16); }
   else if (S.follow && (S.nav || !S.dest)) followCam();
@@ -645,14 +736,32 @@ function renderPreview(state){
   let body;
   if (state === 'loading') body = '<p class="hint">Finding routes…</p>';
   else if (state && state.error) body = `<p class="err">${esc(state.error)}</p>`;
-  else body = `<ul class="routes">${S.routes.map((r, i) => `<li><button class="route-opt${i === S.routeIdx ? ' on' : ''}" data-route="${i}">
-      <b>${fmtDur(r.duration)}</b><span>${fd(r.distance)} · via ${esc(r.via)}</span>${i === 0 ? '<em>Fastest</em>' : '<em></em>'}</button></li>`).join('')}</ul>
+  else {
+    const R0 = S.routes[S.routeIdx];
+    body = `<ul class="routes">${S.routes.map((r, i) => `<li><button class="route-opt${i === S.routeIdx ? ' on' : ''}" data-route="${i}">
+      <b>${fmtDur(r.duration)}</b><span>${fd(r.distance)} · via ${esc(r.via)}</span>${i === 0 ? '<em>Fastest</em>' : '<em></em>'}
+      ${r.engine === 'tomtom' ? `<small class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</small>` : ''}</button></li>`).join('')}</ul>
+    ${R0?.note ? `<p class="hint">${esc(R0.note)}</p>` : ''}
+    ${wxRouteHTML(R0)}
+    <div class="pv-wx" id="pvWx"></div>
     <div class="pv-actions"><button class="btn primary" data-act="go">Go</button><button class="btn" data-act="sim">Simulate</button></div>`;
+  }
   sheetHTML(`<div class="grab"></div>
     <div class="pv-head"><div class="row-txt"><b class="pv-name">${esc(p.name)}</b><small>${esc(shortAddr(p.addr) || p.addr || '')}</small></div>
       <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
     ${body}
-    <div class="pv-save"><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button></div>`);
+    <div class="pv-save"><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button><button class="link" data-act="opts">Route options</button></div>`);
+  const R0 = S.routes[S.routeIdx];
+  if (R0 && !state){
+    const want = p.lat+','+p.lng+','+Math.round(R0.duration / 900);
+    if (S.pvWx?.key === want) fillPvWx(S.pvWx.w);
+    else destWeather(p, R0.duration).then(w => { S.pvWx = { key:want, w }; if (S.dest === p) fillPvWx(w); });
+  }
+}
+function fillPvWx(w){
+  const el = $('#pvWx'); if (!el || !w) return;
+  const R0 = S.routes[S.routeIdx];
+  el.innerHTML = `<span class="pvw-i">${WXI[w.icon]}</span><span><b>${w.temp}° · ${esc(w.label)}</b><small>Forecast at arrival${R0 ? ' ('+clock(R0.duration)+')' : ''}${w.pop ? ' · '+w.pop+'% chance of precipitation' : ''}</small></span>`;
 }
 sheet.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -665,6 +774,8 @@ sheet.addEventListener('click', e => {
   else if (act === 'back') renderIdle();
   else if (act === 'go') startNav(false);
   else if (act === 'sim') startNav(true);
+  else if (act === 'opts') renderRouteOpts();
+  else if (act === 'park') askPark();
   else if (act === 'sethome' || act === 'setwork'){ store.set(act.slice(3), S.dest); toast((act === 'sethome' ? 'Home' : 'Work')+' saved'); }
 });
 
@@ -701,15 +812,6 @@ function closePreview(){
   q.value = ''; $('#clearQ').hidden = true; renderIdle();
   if (S.pos){ S.follow = true; followCam(); }
 }
-async function fetchRoutes(from, to, alts){
-  const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true&alternatives=${alts ? 'true' : 'false'}`;
-  let r;
-  try{ r = await fetch(url); }catch{ throw new Error('Could not reach the routing service. Check your connection.'); }
-  if (!r.ok) throw new Error('Routing service returned '+r.status+'. Try again in a moment.');
-  const j = await r.json();
-  if (j.code !== 'Ok' || !j.routes?.length) throw new Error('No drivable route to this place.');
-  return j.routes.map(prepRoute);
-}
 function prepRoute(r){
   const coords = r.geometry.coordinates.map(c => [c[1], c[0]]);
   if (coords.length < 2) coords.push(coords[0]);
@@ -733,6 +835,7 @@ function drawRoutes(){
     L.polyline(r.coords, { color:css('--casing'), weight:on ? 11 : 9, opacity:on ? 1 : .7, interactive:false }).addTo(routeLayer);
     const pl = L.polyline(r.coords, { color:on ? css('--route') : css('--route-alt'), weight:on ? 7 : 6 }).addTo(routeLayer);
     if (!on) pl.on('click', () => { S.routeIdx = i; drawRoutes(); renderPreview(); });
+    if (on) for (const t of trafficSegs(r)) L.polyline(t.ll, { color:t.color, weight:7, interactive:false }).addTo(routeLayer);
   }
 }
 function fitRoutes(){
@@ -794,7 +897,8 @@ async function dropPinConfirmed(ll){
 function startNav(simulate){
   const route = S.routes[S.routeIdx]; if (!route) return;
   cancelPlace(); addRecent(S.dest);
-  S.nav = { route, spoken:{}, off:0, lastReroute:0, along:0, k:0, rerouting:false };
+  S.nav = { route, spoken:{}, off:0, lastReroute:0, along:0, k:0, rerouting:false, remT:route.duration, remD:route.total };
+  renderMute(); WX.told.forEach(id => { if (String(id).startsWith('ahead:')) WX.told.delete(id); });
   routeLayer.clearLayers(); drawNavRoute();
   $('#searchbar').hidden = true; $('#banner').hidden = false;
   sheet.hidden = true; $('#navbar').hidden = false; renderLegend();
@@ -806,12 +910,16 @@ function startNav(simulate){
   if (S.pos && !S.sim) navTick();
   else renderNav(Math.min(1, route.steps.length-1), route.stepStart[1] ?? route.total, route.total, route.duration);
   if (S.pos) followCam(); else map.setView(route.coords[0], 17);
+  startFasterChecks(); checkWx(true);
 }
 function drawNavRoute(){
   if (navLine) map.removeLayer(navLine); if (navCasing) map.removeLayer(navCasing);
   const c = S.nav.route.coords;
   navCasing = L.polyline(c, { color:css('--casing'), weight:13, interactive:false }).addTo(map);
   navLine = L.polyline(c, { color:css('--route'), weight:8, interactive:false }).addTo(map);
+  if (S.nav.tLayer) map.removeLayer(S.nav.tLayer);
+  S.nav.tSegs = trafficSegs(S.nav.route);
+  S.nav.tLayer = L.layerGroup(S.nav.tSegs.map(t => (t.layer = L.polyline(t.ll, { color:t.color, weight:8, interactive:false })))).addTo(map);
   if (carMarker){ carMarker.remove(); carMarker.addTo(map); }
 }
 function snap(R, p, minAlong){
@@ -843,8 +951,10 @@ function navTick(){
   const stepEnd = k+1 <= last ? R.stepStart[k+1] : R.total, stepLen = stepEnd - R.stepStart[k];
   let remT = R.steps[k].duration * (stepLen > 0 ? Math.max(0, Math.min(1, (stepEnd - s.along)/stepLen)) : 0);
   for (let i = k+1; i < R.steps.length; i++) remT += R.steps[i].duration;
+  n.remT = remT; n.remD = remD;
   renderNav(next, toNext, remD, remT);
   speakGuidance(next, toNext);
+  for (const t of n.tSegs || []) if (!t.gone && t.b <= s.i){ t.gone = true; n.tLayer.removeLayer(t.layer); }
   if (navLine){ const rest = [s.pt].concat(R.coords.slice(s.i+1)); navLine.setLatLngs(rest); navCasing.setLatLngs(rest); }
   if (remD < 25 && s.d < 60) arrive();
 }
@@ -857,6 +967,7 @@ function renderNav(k, toNext, remD, remT){
   const nxt = R.steps[k+1];
   if (nxt && (R.stepStart[k+1] - R.stepStart[k]) < 300){ $('#bThen').hidden = false; $('#bThen').innerHTML = 'Then '+turnSVG(nxt); }
   else $('#bThen').hidden = true;
+  renderLanes(step, toNext);
   $('#eta').textContent = clock(remT); $('#remT').textContent = fmtDur(remT); $('#remD').textContent = fd(remD);
 }
 function speakGuidance(k, toNext){
@@ -883,7 +994,7 @@ async function reroute(){
   try{
     const [r] = await fetchRoutes(S.pos, S.dest.ll, false);
     if (!S.nav) return;
-    n.route = r; n.spoken = {}; n.off = 0; n.along = 0; drawNavRoute();
+    n.route = r; n.spoken = {}; n.off = 0; n.along = 0; drawNavRoute(); startFasterChecks();
     if (S.sim) S.sim.along = 0;
   }catch(e){ toast(e.message); }
   n.rerouting = false;
@@ -893,10 +1004,13 @@ function arrive(){
   if (!S.nav.spoken.arrived) say('You have arrived at '+name);
   endNav(true);
   sheetHTML(`<div class="grab"></div><div class="pv-head"><div class="row-txt"><b class="pv-name">You’ve arrived</b><small>${esc(name)}</small></div>
-    <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>`);
+    <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
+    <div class="pv-actions"><button class="btn primary" data-act="park">Save parking spot</button><button class="btn" data-act="close">Done</button></div>`);
 }
 function endNav(keepDest){
-  stopSim(); keepAwake(false);
+  stopSim(); keepAwake(false); clearInterval(fasterT);
+  if (S.nav?.tLayer) map.removeLayer(S.nav.tLayer);
+  $('#bLanes').hidden = true; WX.ahead = []; renderWxAlert();
   if (navLine){ map.removeLayer(navLine); map.removeLayer(navCasing); navLine = navCasing = null; }
   S.nav = null; renderLegend();
   $('#banner').hidden = true; $('#searchbar').hidden = false; $('#navbar').hidden = true; sheet.hidden = false;
@@ -979,8 +1093,11 @@ function checkReports(){
 
 /* ---------- modal: report + settings ---------- */
 const modal = $('#modal'), mSheet = $('#modalSheet');
-function openModal(html){ mSheet.innerHTML = '<div class="grab"></div>'+html; modal.hidden = false; }
-function closeModal(){ modal.hidden = true; }
+function openModal(html){ mSheet.innerHTML = '<div class="grab"></div>'+html; mSheet.dataset.view = ''; modal.hidden = false; }
+function closeModal(){
+  modal.hidden = true; mSheet.dataset.view = '';
+  if (S.routesStale){ S.routesStale = false; if (S.dest && !S.nav) previewPlace(S.dest); }
+}
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 $('#btnReport').onclick = () => openModal(`<h3 class="label" style="margin-top:0">What do you see?</h3>
   <div class="rgrid">${Object.entries(RT).map(([k, T]) => `<button class="rbtn" data-rep="${k}"><i style="background:${T.color}">${T.svg}</i>${T.label}</button>`).join('')}</div>
@@ -989,31 +1106,55 @@ function seg(key, opts){ return `<div class="seg">${opts.map(([v, l]) => `<butto
 function tg(k, title, sub){ return `<button class="tg" role="switch" aria-checked="${!!settings[k]}" data-tg="${k}"><span class="row-txt"><b>${title}</b><small>${sub}</small></span><span class="sw"></span></button>`; }
 function renderLayers(){
   const keep = mSheet.scrollTop, wasOpen = !modal.hidden && mSheet.querySelector('.bases');
+  mSheet.dataset.view = 'layers';
   openModal(`<h3 class="label" style="margin-top:0">Map style</h3>
     <div class="bases">${[['street','Street'],['topo','Terrain'],['satellite','Satellite']].map(([k, l]) =>
       `<button class="base${(BASES[settings.base] ? settings.base : 'street') === k ? ' on' : ''}" data-base="${k}"><i class="th-${k}"></i>${l}</button>`).join('')}</div>
     <h3 class="label">On the map</h3>
-    ${tg('ovOffroad', 'Off-road tracks', '4×4, ATV and dirt tracks colored by grade. Tap a track for details.')}
+    ${tg('ovTraffic', 'Live traffic', trafficKey() ? 'Roads colored by current speed, from TomTom. Refreshes every 2 minutes.' : 'Roads colored by current speed. Needs a free TomTom key.')}
+    ${settings.ovTraffic ? `<div class="subs">${tg('trafficInc', 'Incidents', 'Crashes, closures and roadwork icons')}
+      <div class="keyrow"><label for="ttKey">TomTom API key</label>
+        <div class="keyin"><input id="ttKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key" value="${esc(trafficKey())}"><button class="btn" data-ttsave>Save</button></div>
+        <small>Get one free at developer.tomtom.com (sign up, then copy the key from your dashboard). It stays on this device.</small></div></div>` : ''}
+    ${tg('ovRadar', 'Weather radar', 'NEXRAD reflectivity for the US, updated every 5 minutes')}
+    ${settings.ovRadar ? `<div class="subs">${tg('radarAnim', 'Animate last hour', 'Loop the past 50 minutes of radar')}</div>` : ''}
+    ${tg('ovWarnings', 'Storm warnings', 'NWS tornado, severe storm and flash flood warnings, with alerts when you or your route is inside one')}
+    ${tg('ovOffroad', 'Off-road trails', 'Dirt roads, 4×4, ATV and motorcycle routes. Tap one for details.')}
+    ${settings.ovOffroad ? `<div class="subs">${SOURCES.map(x => tg(x.key, x.label, x.sub)).join('')}</div>` : ''}
     ${tg('ovHike', 'Hiking routes', 'Marked hiking routes from Waymarked Trails')}
     ${tg('ovMtb', 'Mountain bike routes', 'Marked MTB routes from Waymarked Trails')}
     ${tg('ovReports', 'Road reports', 'Police, crashes and hazards you reported')}
     <h3 class="label">Tools</h3>
     <button class="tg" data-tool="rec"><span class="row-txt"><b>${REC.on ? 'Stop recording' : 'Record track'}</b><small>${REC.on ? fd(REC.dist)+' recorded so far' : 'Draw your path on the map and save it as a GPX file'}</small></span>
       <span class="rec-dot${REC.on ? ' on' : ''}"></span></button>
+    ${store.get('parked') ? `<button class="tg" data-tool="parkgo"><span class="row-txt"><b>Go to parked car</b><small>Route back to your saved spot</small></span><span class="park-badge">P</span></button>
+      <button class="tg" data-tool="parkclear"><span class="row-txt"><b>Clear parking spot</b><small>Remove the P marker</small></span></button>`
+      : `<button class="tg" data-tool="park"><span class="row-txt"><b>Save parking spot</b><small>Drop a P marker so you can find your car</small></span><span class="park-badge">P</span></button>`}
+    <h3 class="label">Routing</h3>
+    <button class="tg" data-tool="opts"><span class="row-txt"><b>Route options</b><small>${[trafficKey() && settings.trafficRouting ? 'Live traffic' : 'No traffic', settings.avoidTolls && 'no tolls', settings.avoidHighways && 'no highways', settings.avoidFerries && 'no ferries', settings.avoidUnpaved && 'no unpaved'].filter(Boolean).join(' · ')}</small></span><span class="chev">›</span></button>
     <h3 class="label">Settings</h3>
     <div class="set-row"><span>Units</span>${seg('units', [['imperial','Miles'],['metric','Kilometers']])}</div>
     <div class="set-row"><span>Voice guidance</span>${seg('voice', [['true','On'],['false','Off']])}</div>
     <div class="set-row"><span>Appearance</span>${seg('theme', [['auto','Auto'],['light','Day'],['dark','Night']])}</div>
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
-    <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
+    <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
+  mSheet.dataset.view = 'layers';
   if (wasOpen) mSheet.scrollTop = keep;
 }
+const rerenderModal = () => mSheet.dataset.view === 'routeopts' ? renderRouteOpts() : renderLayers();
 $('#btnLayers').onclick = renderLayers;
 mSheet.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.rep) return addReport(b.dataset.rep);
+  if ('ttsave' in b.dataset){ saveTrafficKey(); return; }
   if (b.dataset.base){ settings.base = b.dataset.base; saveSettings(); applyTheme(); renderLayers(); return; }
-  if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); applyOverlays(); renderLayers(); return; }
+  if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); if (k.startsWith('src')) resetTrails();
+    if (/^(avoid|trafficRouting)/.test(k)) S.routesStale = true;
+    applyOverlays(); rerenderModal(); return; }
+  if (b.dataset.tool === 'park'){ askPark(); return; }
+  if (b.dataset.tool === 'parkgo'){ const p = store.get('parked'); closeModal(); if (p) previewPlace({ name:'Parked car', addr:'Your saved parking spot', lat:p.lat, lng:p.lng }); return; }
+  if (b.dataset.tool === 'parkclear'){ store.set('parked', null); drawPark(); renderLayers(); toast('Parking spot cleared'); return; }
+  if (b.dataset.tool === 'opts'){ renderRouteOpts(); return; }
   if (b.dataset.tool === 'rec'){ if (REC.on) recStop(); else { closeModal(); recStart(); } return; }
   if (b.dataset.rec === 'save'){ saveGPX(); return; }
   if (b.dataset.rec === 'clear'){ if (REC.line){ map.removeLayer(REC.line); REC.line = null; } REC.pts = []; closeModal(); return; }
@@ -1024,6 +1165,8 @@ mSheet.addEventListener('click', e => {
     if (k === 'theme') applyTheme();
     if (k === 'units'){ updateSpeedo(); updateAlt(); if (S.nav && S.pos) navTick(); else if (!S.nav) S.dest ? renderPreview() : renderIdle(); }
     if (k === 'voice' && !v) speechSynthesis?.cancel?.();
+    if (k === 'voice') renderMute();
+    if (k === 'units'){ WX.condAt = 0; refreshConditions(true); S.pvWx = null; }
     renderLayers(); return;
   }
   if (b.dataset.clear === 'places'){ ['home','work','recents'].forEach(k => store.set(k, null)); if (!S.dest && !S.nav) renderIdle(); toast('Saved places cleared'); }
@@ -1098,10 +1241,10 @@ function applyOverlays(){
   wmLayer('hike', settings.ovHike); wmLayer('mtb', settings.ovMtb);
   if (settings.ovReports) reportLayer.addTo(map); else map.removeLayer(reportLayer);
   if (settings.ovOffroad){ OR.layer.addTo(map); loadTrails(); } else { map.removeLayer(OR.layer); clearTrailHL(); }
-  renderLegend();
+  applyTraffic(); applyRadar(); applyWarnings(); renderLegend();
 }
 
-/* ---------- off-road tracks (OSM via Overpass) ---------- */
+/* ---------- off-road trails: OpenStreetMap + USFS Motor Vehicle Use Map + BLM GTLF ---------- */
 const GRADES = {
   grade1:['#2f9e44','Grade 1','Solid surface, gravel or paved'],
   grade2:['#94c11f','Grade 2','Mostly solid gravel'],
@@ -1110,63 +1253,170 @@ const GRADES = {
   grade5:['#d6332a','Grade 5','Soft ground, high clearance']
 };
 const OR_UNK = '#9a7b55', OR_4WD = '#8e44c9', OR_CLOSED = '#8d969b', OR_MIN_Z = 11.5;
-const OR = { layer:L.layerGroup(), ways:new Map(), loaded:null, busy:false, status:'', hl:null, sel:null };
+// Official access classes shared by USFS MVUM and BLM travel plans.
+const ACC = {
+  all:{ color:'#0b72d9', label:'Open to all vehicles', short:'All' },
+  hwy:{ color:'#4a5a8c', label:'Street-legal vehicles only', short:'Street legal' },
+  ohv50:{ color:'#d81b60', label:'Vehicles 50″ wide or less (ATV/UTV)', short:'≤50″' },
+  moto:{ color:'#00897b', label:'Motorcycles only', short:'Moto' },
+  special:{ color:'#3b3b3b', label:'Special designation, check rules', short:'Special' },
+  limited:{ color:'#0b72d9', label:'Limited public use, check rules', short:'Limited', dash:'12 5 2 5' }
+};
+const USFS_SYM = { 1:['all',0], 2:['all',1], 3:['hwy',0], 4:['hwy',1], 5:['all',0], 6:['all',1], 7:['ohv50',0], 8:['ohv50',1],
+  9:['moto',0], 10:['moto',1], 11:['special',0], 12:['special',1], 16:['ohv50',0], 17:['ohv50',1] };
+const USFS_URL = 'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer/';
+const BLM_URL = 'https://gis.blm.gov/arcgis/rest/services/transportation/BLM_Natl_GTLF_Public_Display/MapServer/';
+const SOURCES = [
+  { key:'srcOsm', label:'OpenStreetMap', sub:'Community-mapped dirt and 4×4 tracks, worldwide' },
+  { key:'srcUsfs', label:'National Forests (USFS)', sub:'Official Motor Vehicle Use Map roads and trails, with vehicle types and open dates' },
+  { key:'srcBlm', label:'BLM public lands', sub:'Official BLM roads and trails managed for motorized use' }
+];
+const OR = { layer:L.layerGroup(), ways:new Map(), loaded:null, busy:false, status:'', failed:[], hl:null, sel:null, gen:0 };
 const trailRenderer = L.canvas({ pane:'trails', padding:.4, tolerance:10 });
 const isClosed = t => /^(private|no)$/.test(t.access || '') || /^(private|no)$/.test(t.motor_vehicle || '');
+const cap = s => s ? String(s).replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()) : '';
+const tidy = s => { if (s == null || String(s).trim() === '') return ''; s = String(s).trim(); return cap(s === s.toUpperCase() ? s.toLowerCase() : s); };
 function trailStyle(t){
   const closed = isClosed(t), fwd = t['4wd_only'] === 'yes';
   return { color: closed ? OR_CLOSED : fwd ? OR_4WD : (GRADES[t.tracktype]?.[0] || OR_UNK),
     weight: fwd ? 5 : 4, opacity: closed ? .75 : .95, lineCap:'round',
     dashArray: closed ? '2 8' : (t.highway === 'path' || t.highway === 'bridleway') ? '9 6' : null };
 }
-let trailT = null;
-map.on('moveend', () => { if (!settings.ovOffroad) return; clearTimeout(trailT); trailT = setTimeout(loadTrails, 600); });
-async function loadTrails(){
-  if (!settings.ovOffroad) return;
-  if (map.getZoom() < OR_MIN_Z){ OR.status = 'zoom'; return renderLegend(); }
-  if (OR.loaded && OR.loaded.contains(map.getBounds())){ OR.status = 'ok'; return renderLegend(); }
-  if (OR.busy) return;
-  const pb = map.getBounds().pad(.3);
-  if (OR.ways.size > 8000){ OR.layer.clearLayers(); OR.ways.clear(); }
-  OR.busy = true; OR.status = 'loading'; renderLegend();
+function accStyle(cls, seasonal, trail){
+  const A = ACC[cls] || ACC.special;
+  return { color:A.color, weight: trail ? 3.5 : 4.5, opacity:.95, lineCap:'round', dashArray: A.dash || (seasonal ? '8 6' : null) };
+}
+function addLine(key, lines, style, info){
+  if (OR.ways.has(key)) return;
+  const line = L.polyline(lines, { renderer:trailRenderer, ...style });
+  line.on('click', e => { L.DomEvent.stop(e); openTrail(info(), lines, e.latlng); });
+  const g = L.layerGroup([L.polyline(lines, { renderer:trailRenderer, color:'#ffffff', weight:style.weight + 3, opacity:.55, interactive:false }), line]);
+  g.addTo(OR.layer); OR.ways.set(key, g);
+}
+
+/* OpenStreetMap via Overpass */
+async function loadOSM(pb, gen){
   const bb = [pb.getSouth(), pb.getWest(), pb.getNorth(), pb.getEast()].map(n => n.toFixed(5)).join(',');
   const V = '"^(yes|permissive|designated)$"';
   const ql = `[out:json][timeout:25][bbox:${bb}];(way[highway=track];way["4wd_only"=yes];`
     + `way[highway~"^(path|bridleway)$"][motor_vehicle~${V}];way[highway~"^(path|track|unclassified)$"][atv~${V}];`
     + `way[highway~"^(path|track)$"][motorcycle~${V}];);out geom 5000;`;
-  try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql),
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
-    if (!r.ok) throw new Error();
-    const j = await r.json();
-    for (const w of j.elements || []) if (w.type === 'way' && w.geometry && !OR.ways.has(w.id)) addTrail(w);
-    OR.loaded = pb; OR.status = 'ok';
-  }catch{ OR.status = 'error'; }
-  OR.busy = false; renderLegend();
-  if (OR.status === 'ok' && settings.ovOffroad && map.getZoom() >= OR_MIN_Z && !OR.loaded.contains(map.getBounds())) setTimeout(loadTrails, 300);
+  const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql),
+    headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+  if (!r.ok) throw new Error('osm');
+  const j = await r.json();
+  if (gen !== OR.gen) return;
+  for (const w of j.elements || []){
+    if (w.type !== 'way' || !w.geometry) continue;
+    const t = w.tags || {};
+    addLine('osm:'+w.id, [w.geometry.map(g => [g.lat, g.lon])], trailStyle(t), () => osmInfo(t));
+  }
 }
-function addTrail(w){
-  const ll = w.geometry.map(g => [g.lat, g.lon]), st = trailStyle(w.tags || {});
-  const line = L.polyline(ll, { renderer:trailRenderer, ...st });
-  line.on('click', e => { L.DomEvent.stop(e); openTrail(w, ll, e.latlng); });
-  const g = L.layerGroup([L.polyline(ll, { renderer:trailRenderer, color:'#ffffff', weight:st.weight + 3, opacity:.55, interactive:false }), line]);
-  g.addTo(OR.layer); OR.ways.set(w.id, g);
-}
-const cap = s => s ? String(s).replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()) : '';
-function openTrail(w, ll, at){
-  if (PLACE){ PLACE.m.setLatLng(at); plSub(); return; }
-  const t = w.tags || {}, g = GRADES[t.tracktype], closed = isClosed(t), fwd = t['4wd_only'] === 'yes';
-  let len = 0; for (let i = 1; i < ll.length; i++) len += dist(ll[i-1], ll[i]);
+function osmInfo(t){
+  const g = GRADES[t.tracktype], closed = isClosed(t), fwd = t['4wd_only'] === 'yes';
   const kind = fwd ? '4×4 only track' : t.highway === 'track' ? 'Dirt track' : t.highway === 'bridleway' ? 'Bridleway' : t.highway === 'path' ? 'Trail' : 'Road';
   const veh = [['motor_vehicle','Vehicles'],['atv','ATV'],['motorcycle','Motorcycle']].filter(([k]) => t[k]).map(([k, l]) => l+': '+t[k]).join(', ');
-  const rows = [['Grade', g ? g[1]+' · '+g[2] : 'Not graded'], ['Surface', cap(t.surface)], ['Condition', cap(t.smoothness)],
-    ['Access', closed ? 'Closed or private' : cap(t.access) || 'Not posted'], ['Allowed', veh], ['Length', fd(len)]].filter(r => r[1]);
-  const name = t.name || t.ref || 'Unnamed '+kind.toLowerCase();
+  return { name:t.name || t.ref || 'Unnamed '+kind.toLowerCase(), kind, src:'OpenStreetMap',
+    badge: g || fwd || closed ? [trailStyle(t).color, closed ? 'Closed' : fwd ? '4×4 only' : g[1]] : null,
+    rows:[['Grade', g ? g[1]+' · '+g[2] : 'Not graded'], ['Surface', tidy(t.surface)], ['Condition', tidy(t.smoothness)],
+      ['Access', closed ? 'Closed or private' : tidy(t.access) || 'Not posted'], ['Allowed', veh]] };
+}
+
+/* USFS + BLM ArcGIS feature services (GeoJSON queries by map extent) */
+async function loadArc(src, base, layers, pb, gen){
+  const z = map.getZoom(), tol = (360 / (256 * 2 ** z)).toFixed(7);   // ~1 screen pixel, simplifies geometry server-side
+  const env = [pb.getWest(), pb.getSouth(), pb.getEast(), pb.getNorth()].map(n => n.toFixed(5)).join(',');
+  await Promise.all(layers.map(async lyr => {
+    const u = `${base}${lyr}/query?where=1%3D1&geometry=${env}&geometryType=esriGeometryEnvelope&inSR=4326`
+      + `&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&outSR=4326&maxAllowableOffset=${tol}&geometryPrecision=6&f=geojson`;
+    const r = await fetch(u);
+    if (!r.ok) throw new Error(src);
+    const j = await r.json();
+    if (j.error) throw new Error(src);
+    if (gen !== OR.gen) return;
+    for (const f of j.features || []) addArcFeature(src, lyr, f);
+  }));
+}
+function addArcFeature(src, lyr, f){
+  const g = f.geometry; if (!g) return;
+  const flip = l => l.map(c => [c[1], c[0]]);
+  const lines = g.type === 'LineString' ? [flip(g.coordinates)] : g.type === 'MultiLineString' ? g.coordinates.map(flip) : null;
+  if (!lines || !lines.length) return;
+  const p = f.properties || {}, id = f.id ?? p.objectid ?? p.OBJECTID ?? p.globalid ?? p.GlobalID;
+  if (src === 'usfs'){
+    const [cls, seas] = USFS_SYM[p.symbol] || ['special', 0];
+    addLine(`usfs${lyr}:${id}`, lines, accStyle(cls, seas, lyr === 2), () => usfsInfo(p, lyr, cls, seas));
+  } else {
+    const cls = blmClass(p, lyr), seas = /^(y|yes|seasonal)/i.test(String(p.PLAN_SEASON_RSTRCT_CODE || ''));
+    addLine(`blm${lyr}:${id}`, lines, accStyle(cls, seas, lyr >= 2), () => blmInfo(p, lyr, cls, seas));
+  }
+}
+const USFS_VEH = [['passengervehicle','Passenger car'],['highclearancevehicle','High-clearance'],['truck','Truck'],
+  ['fourwd_gt50inches','4WD over 50″'],['twowd_gt50inches','2WD over 50″'],['atv','ATV'],['other_ohv_lt50inches','UTV/OHV 50″ or less'],
+  ['motorcycle','Motorcycle'],['otherwheeled_ohv','Other wheeled OHV']];
+const isOpen = v => v != null && String(v).trim() !== '' && !/^(no|n|null|closed|none|n\/a)$/i.test(String(v).trim());
+function usfsInfo(p, lyr, cls, seas){
+  const road = lyr === 1;
+  const open = USFS_VEH.filter(([k]) => isOpen(p[k])).map(([k, l]) => {
+    const d = String(p[k.replace('inches', '')+'_datesopen'] || '').trim();
+    return d && !/^0?1\/0?1\s*-\s*12\/31$/.test(d) ? `${l} (${d})` : l;
+  }).join(', ');
+  return { name: tidy(p.name) || (road ? 'Forest road ' : 'Forest trail ')+(p.id || ''), kind: (road ? 'Forest road' : 'Forest trail')+(p.id ? ' '+p.id : ''),
+    src:'USFS Motor Vehicle Use Map', badge:[ACC[cls].color, ACC[cls].short+(seas ? ' · seasonal' : '')],
+    rows:[['Access', ACC[cls].label+(seas ? ', seasonal' : ', yearlong')], ['Open to', open], ['Maintenance', tidy(p.operationalmaintlevel)],
+      ['Surface', tidy(p.surfacetype)], ['Trail class', tidy(p.trailclass)], ['Forest', [tidy(p.forestname), tidy(p.districtname)].filter(Boolean).join(' · ')]] };
+}
+function blmClass(p, lyr){
+  if (lyr === 1 || lyr === 3) return 'limited';
+  const m = String(p.PLAN_ALLOW_MODE_TRNSPRT || p.PLAN_MODE_TRNSPRT || '');
+  if (/motorcycle|single.?track/i.test(m) && !/atv|utv|4wd|4x4|full.?size|all/i.test(m)) return 'moto';
+  if (/atv|utv|side.?by|less than 50|<\s*50|50"?\s*or less/i.test(m) && !/full.?size|4wd|4x4|all/i.test(m)) return 'ohv50';
+  return 'all';
+}
+function blmInfo(p, lyr, cls, seas){
+  const road = lyr <= 1, mode = tidy(p.PLAN_MODE_TRNSPRT), allow = tidy(p.PLAN_ALLOW_MODE_TRNSPRT);
+  return { name: tidy(p.ROUTE_PRMRY_NM) || (road ? 'BLM road' : 'BLM trail'), kind: (road ? 'BLM road' : 'BLM trail')+(p.ADMIN_ST ? ' · '+p.ADMIN_ST : ''),
+    src:'BLM Ground Transportation Linear Features', badge:[ACC[cls].color, ACC[cls].short+(seas ? ' · seasonal' : '')],
+    rows:[['Access', ACC[cls].label], ['Designation', tidy(p.PLAN_OHV_ROUTE_DSGNTN)], ['Allowed', allow], ['Mode', mode !== allow ? mode : ''],
+      ['Limits', tidy(p.OHV_DSGNTN_LIM_EXPLAIN || p.OHV_ROUTE_DSGNTN_LIM)], ['Seasonal', tidy(p.PLAN_SEASON_RSTRCT_CODE)],
+      ['Restriction', tidy(p.PLAN_ACCESS_RSTRCT)], ['Surface', tidy(p.OBSRVE_SRFCE_TYPE)]] };
+}
+
+/* loading + popups + legend */
+let trailT = null;
+map.on('moveend', () => { if (!settings.ovOffroad) return; clearTimeout(trailT); trailT = setTimeout(loadTrails, 600); });
+function resetTrails(){ OR.gen++; OR.layer.clearLayers(); OR.ways.clear(); OR.loaded = null; OR.failed = []; clearTrailHL(); map.closePopup(); }
+async function loadTrails(){
+  if (!settings.ovOffroad) return;
+  if (!SOURCES.some(s => settings[s.key])){ OR.status = 'none'; return renderLegend(); }
+  if (map.getZoom() < OR_MIN_Z){ OR.status = 'zoom'; return renderLegend(); }
+  if (OR.loaded && OR.loaded.contains(map.getBounds())){ OR.status = 'ok'; return renderLegend(); }
+  if (OR.busy) return;
+  const pb = map.getBounds().pad(.3), gen = OR.gen;
+  if (OR.ways.size > 12000){ OR.layer.clearLayers(); OR.ways.clear(); }
+  OR.busy = true; OR.status = 'loading'; renderLegend();
+  const jobs = [];
+  if (settings.srcOsm) jobs.push(['OpenStreetMap', loadOSM(pb, gen)]);
+  if (settings.srcUsfs) jobs.push(['Forest Service', loadArc('usfs', USFS_URL, [1, 2], pb, gen)]);
+  if (settings.srcBlm) jobs.push(['BLM', loadArc('blm', BLM_URL, [0, 1, 2, 3], pb, gen)]);
+  const res = await Promise.allSettled(jobs.map(j => j[1]));
+  OR.busy = false;
+  if (gen !== OR.gen) return loadTrails();          // sources changed mid-load
+  OR.failed = jobs.filter((_, i) => res[i].status === 'rejected').map(j => j[0]);
+  OR.status = OR.failed.length === jobs.length ? 'error' : 'ok';
+  if (OR.status === 'ok') OR.loaded = pb;
+  renderLegend();
+  if (OR.status === 'ok' && settings.ovOffroad && map.getZoom() >= OR_MIN_Z && !OR.loaded.contains(map.getBounds())) setTimeout(loadTrails, 300);
+}
+function openTrail(info, lines, at){
+  if (PLACE){ PLACE.m.setLatLng(at); plSub(); return; }
+  let len = 0; for (const l of lines) for (let i = 1; i < l.length; i++) len += dist(l[i-1], l[i]);
   clearTrailHL();
-  OR.hl = L.polyline(ll, { renderer:trailRenderer, color:'#ffe14d', weight:12, opacity:.6, interactive:false }).addTo(map);
-  OR.sel = { ll, name };
-  L.popup({ maxWidth:280 }).setLatLng(at).setContent(`<div class="pop"><b>${esc(name)}</b><small>${kind}</small>
-    ${g || fwd || closed ? `<span class="tp-grade" style="background:${trailStyle(t).color}">${closed ? 'Closed' : fwd ? '4×4 only' : g[1]}</span>` : ''}
+  OR.hl = L.polyline(lines, { renderer:trailRenderer, color:'#ffe14d', weight:12, opacity:.6, interactive:false }).addTo(map);
+  OR.sel = { ends:lines.flatMap(l => [l[0], l[l.length - 1]]), name:info.name };
+  const rows = info.rows.filter(r => r[1]).concat([['Length', fd(len)], ['Source', info.src]]);
+  L.popup({ maxWidth:290 }).setLatLng(at).setContent(`<div class="pop"><b>${esc(info.name)}</b><small>${esc(info.kind)}</small>
+    ${info.badge ? `<span class="tp-grade" style="background:${info.badge[0]}">${esc(info.badge[1])}</span>` : ''}
     <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
     <button class="go" data-trail-go>Directions to trail</button></div>`).openOn(map);
 }
@@ -1176,22 +1426,74 @@ map.on('popupopen', e => {
   const b = e.popup.getElement()?.querySelector('[data-trail-go]'); if (!b) return;
   b.onclick = () => {
     const s = OR.sel; if (!s) return;
-    const from = S.pos || [map.getCenter().lat, map.getCenter().lng], a = s.ll[0], z = s.ll[s.ll.length - 1];
-    const end = dist(from, a) <= dist(from, z) ? a : z;
+    const from = S.pos || [map.getCenter().lat, map.getCenter().lng];
+    const end = s.ends.reduce((a, b) => dist(from, b) < dist(from, a) ? b : a);
     map.closePopup();
     previewPlace({ name:s.name, addr:'Off-road trail · nearest end', lat:end[0], lng:end[1] });
   };
 });
 function renderLegend(){
+  renderTrafficKey();
   const el = $('#legend');
   if (!settings.ovOffroad || S.nav){ el.hidden = true; return; }
-  const st = { zoom:'Zoom in to load trails', loading:'Loading trails…', error:'Trails didn’t load. Move the map to retry.' }[OR.status] || '';
-  el.innerHTML = '<span class="lg-t">Off-road</span>'
+  const st = { zoom:'Zoom in to load trails', loading:'Loading trails…', error:'Trails didn’t load. Move the map to retry.',
+    none:'Turn on a trail source in Layers' }[OR.status] || (OR.failed.length ? OR.failed.join(' and ')+' didn’t load' : '');
+  const open = settings.legendOpen !== false;
+  let h = `<button class="lg-head" data-lg aria-expanded="${open}"><span class="lg-t">Off-road</span>`
+    + (st ? `<span class="lg-status${OR.status === 'loading' ? ' busy' : ''}">${st}</span>` : '')
+    + `<span class="lg-car">${open ? 'Hide key' : 'Key'}</span></button>`;
+  if (open && settings.srcOsm) h += '<div class="lg-row"><span class="lg-k">OSM grade</span>'
     + Object.values(GRADES).map((g, i) => `<span class="lg" title="${g[1]}: ${g[2]}"><i style="background:${g[0]}"></i>${i + 1}</span>`).join('')
-    + `<span class="lg"><i style="background:${OR_4WD}"></i>4×4</span><span class="lg"><i class="dash" style="--c:${OR_CLOSED}"></i>Closed</span>`
-    + (st ? `<span class="lg-status${OR.status === 'loading' ? ' busy' : ''}">${st}</span>` : '');
+    + `<span class="lg"><i style="background:${OR_4WD}"></i>4×4</span><span class="lg"><i class="dash" style="--c:${OR_CLOSED}"></i>Closed</span></div>`;
+  if (open && (settings.srcUsfs || settings.srcBlm)) h += '<div class="lg-row"><span class="lg-k">Public land</span>'
+    + ['all','hwy','ohv50','moto','special'].map(k => `<span class="lg" title="${ACC[k].label}"><i style="background:${ACC[k].color}"></i>${ACC[k].short}</span>`).join('')
+    + `<span class="lg"><i class="dash" style="--c:${ACC.all.color}"></i>Seasonal</span></div>`;
+  el.innerHTML = h; el.hidden = false;
+}
+$('#legend').addEventListener('click', e => {
+  if (!e.target.closest('[data-lg]')) return;
+  settings.legendOpen = settings.legendOpen === false; saveSettings(); renderLegend();
+});
+
+/* ---------- live traffic (TomTom raster flow + incidents, user's own key) ---------- */
+const TT = { flow:null, inc:null, timer:null, sig:null, warned:false };
+const TT_COLORS = [['#2fbf4a','Free flow'],['#f7a21b','Slow'],['#e8382d','Heavy'],['#8b1a1a','Stopped']];
+const trafficKey = () => String(store.get('ttkey', '') || '').trim();
+function applyTraffic(){
+  const key = trafficKey(), on = !!(settings.ovTraffic && key);
+  const dark = (isDark() && baseKey === 'street') || baseKey === 'satellite';
+  const sig = on ? [key, dark, !!settings.trafficInc].join('|') : '';
+  if (sig === TT.sig) return renderTrafficKey();
+  TT.sig = sig;
+  if (TT.flow){ map.removeLayer(TT.flow); TT.flow = null; }
+  if (TT.inc){ map.removeLayer(TT.inc); TT.inc = null; }
+  clearInterval(TT.timer);
+  if (on){
+    const k = encodeURIComponent(key);
+    // {ts} changes every 2 minutes so redraw() fetches fresh tiles instead of cached ones.
+    const opt = { pane:'overTiles', maxZoom:19, opacity:.92, ts:() => Math.floor(Date.now() / 120000), attribution:'Traffic &copy; <a href="https://www.tomtom.com">TomTom</a>' };
+    TT.flow = L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/${dark ? 'relative0-dark' : 'relative0'}/{z}/{x}/{y}.png?key=${k}&thickness=8&ts={ts}`, opt).addTo(map);
+    TT.flow.on('tileerror', () => { if (!TT.warned){ TT.warned = true; toast('Traffic didn’t load. Check your TomTom key in Layers.', 5000); } });
+    TT.flow.on('tileload', () => { TT.warned = false; });
+    if (settings.trafficInc) TT.inc = L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/incidents/${dark ? 'night' : 's1'}/{z}/{x}/{y}.png?key=${k}&ts={ts}`, { ...opt, attribution:'' }).addTo(map);
+    TT.timer = setInterval(() => { if (document.visibilityState === 'visible'){ TT.flow?.redraw(); TT.inc?.redraw(); } }, 120000);
+  }
+  renderTrafficKey();
+}
+function renderTrafficKey(){
+  const el = $('#tkey');
+  if (!(settings.ovTraffic && trafficKey()) || S.nav){ el.hidden = true; return; }
+  el.innerHTML = '<span class="lg-t">Traffic</span>' + TT_COLORS.map(([c, l]) => `<span class="tk"><i style="background:${c}"></i>${l}</span>`).join('');
   el.hidden = false;
 }
+function saveTrafficKey(){
+  const v = ($('#ttKey')?.value || '').trim();
+  store.set('ttkey', v); TT.warned = false; TT.sig = null;
+  if (v && !settings.ovTraffic){ settings.ovTraffic = true; saveSettings(); }
+  applyTraffic(); renderLayers();
+  toast(v ? 'Traffic key saved' : 'Traffic key removed');
+}
+mSheet.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ttKey'){ e.preventDefault(); saveTrafficKey(); } });
 
 /* ---------- nearby categories ---------- */
 const CATS = {
@@ -1291,8 +1593,384 @@ function saveGPX(){
 }
 $('#recPill').onclick = recStop;
 
+/* ---------- routing engines: TomTom (live traffic) or OSRM ---------- */
+async function fetchRoutes(from, to, alts){
+  if (trafficKey() && settings.trafficRouting){
+    try{ return await fetchTomTom(from, to, alts); }
+    catch(e){ if (e.noRoute) throw e; toast('Traffic routing didn’t respond, so this route ignores traffic.', 4000); }
+  }
+  return fetchOSRM(from, to, alts);
+}
+async function fetchOSRM(from, to, alts){
+  const ex = [settings.avoidTolls && 'toll', settings.avoidHighways && 'motorway', settings.avoidFerries && 'ferry'].filter(Boolean);
+  const base = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true&alternatives=${alts ? 'true' : 'false'}`;
+  const get = async url => {
+    let r; try{ r = await fetch(url); }catch{ throw new Error('Could not reach the routing service. Check your connection.'); }
+    const j = await r.json().catch(() => ({}));
+    return { ok:r.ok && j.code === 'Ok' && j.routes?.length, j, status:r.status };
+  };
+  let res = await get(base + (ex.length ? '&exclude='+ex.join(',') : '')), note = '';
+  if (!res.ok && ex.length){ res = await get(base); note = 'The free router can’t apply your avoid settings to this trip.'; }
+  if (!res.ok){
+    if (res.j.code === 'NoRoute' || res.j.code === 'Ok') throw new Error('No drivable route to this place.');
+    throw new Error('Routing service returned '+(res.j.code || res.status)+'. Try again in a moment.');
+  }
+  return res.j.routes.map(r => Object.assign(prepRoute(r), { engine:'osrm', note }));
+}
+async function fetchTomTom(from, to, alts){
+  const av = [settings.avoidTolls && 'tollRoads', settings.avoidHighways && 'motorways', settings.avoidFerries && 'ferries', settings.avoidUnpaved && 'unpavedRoads'].filter(Boolean);
+  const u = `https://api.tomtom.com/routing/1/calculateRoute/${from[0].toFixed(6)},${from[1].toFixed(6)}:${to[0].toFixed(6)},${to[1].toFixed(6)}/json`
+    + `?key=${encodeURIComponent(trafficKey())}&traffic=true&travelMode=car&routeType=fastest&instructionsType=coded&sectionType=traffic&computeTravelTimeFor=all`
+    + (alts ? '&maxAlternatives=2' : '') + av.map(a => '&avoid='+a).join('');
+  const r = await fetch(u);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.routes?.length){
+    const msg = j.error?.description || j.detailedError?.message || '';
+    if (/no route|NO_ROUTE_FOUND|unreachable/i.test(msg)){ const e = new Error('No drivable route to this place.'); e.noRoute = true; throw e; }
+    throw new Error('tomtom');
+  }
+  return j.routes.map(tt => {
+    const R = prepRoute(ttToOsrm(tt));
+    R.engine = 'tomtom'; R.delay = tt.summary.trafficDelayInSeconds || 0;
+    R.traffic = (tt.sections || []).filter(s => s.sectionType === 'TRAFFIC')
+      .map(s => ({ a:s.startPointIndex, b:s.endPointIndex, mag:s.magnitudeOfDelay ?? 0, cat:s.simpleCategory, delay:s.delayInSeconds || 0 }));
+    return R;
+  });
+}
+function ttToOsrm(tt){
+  const pts = tt.legs.flatMap(l => l.points).map(p => [p.longitude, p.latitude]);
+  const ins = (tt.guidance?.instructions || []).filter(i => !/^WAYPOINT/.test(i.maneuver || ''));
+  let steps = ins.map((i, n) => {
+    const nx = ins[n + 1];
+    return { distance: nx ? nx.routeOffsetInMeters - i.routeOffsetInMeters : 0, duration: nx ? nx.travelTimeInSeconds - i.travelTimeInSeconds : 0,
+      name: i.street || '', ref: (i.roadNumbers || [])[0] || '', exits: i.exitNumber || '', maneuver: ttManeuver(i, pts) };
+  });
+  if (steps.length < 2) steps = [
+    { distance:tt.summary.lengthInMeters, duration:tt.summary.travelTimeInSeconds, name:'', maneuver:ttManeuver({ maneuver:'DEPART', pointIndex:0 }, pts) },
+    { distance:0, duration:0, name:'', maneuver:{ type:'arrive' } }];
+  return { geometry:{ coordinates:pts }, legs:[{ steps }], duration:tt.summary.travelTimeInSeconds, distance:tt.summary.lengthInMeters };
+}
+function ttManeuver(i, pts){
+  const m = i.maneuver || '', ang = i.turnAngleInDecimalDegrees || 0;
+  const side = /LEFT/.test(m) ? 'left' : /RIGHT/.test(m) ? 'right' : ang < -10 ? 'left' : ang > 10 ? 'right' : '';
+  if (m === 'DEPART'){ const k = i.pointIndex || 0, a = pts[k], b = pts[Math.min(k + 1, pts.length - 1)]; return { type:'depart', bearing_after: bearing([a[1], a[0]], [b[1], b[0]]) }; }
+  if (/^ARRIVE/.test(m)) return { type:'arrive', modifier:side };
+  if (m === 'STRAIGHT' || m === 'FOLLOW' || /^SWITCH_/.test(m) || m === 'TAKE_FERRY') return { type:'continue', modifier:'straight' };
+  if (/^KEEP_/.test(m)) return { type:'fork', modifier:'slight '+side };
+  if (/^BEAR_/.test(m)) return { type:'turn', modifier:'slight '+side };
+  if (/^TURN_/.test(m)) return { type:'turn', modifier:side };
+  if (/^SHARP_/.test(m)) return { type:'turn', modifier:'sharp '+side };
+  if (/UTURN/.test(m)) return { type:'turn', modifier:'uturn' };
+  if (/^ROUNDABOUT/.test(m)) return { type:'roundabout', exit:i.roundaboutExitNumber || 1,
+    modifier: m === 'ROUNDABOUT_LEFT' ? 'left' : m === 'ROUNDABOUT_RIGHT' ? 'right' : m === 'ROUNDABOUT_BACK' ? 'sharp left' : 'straight' };
+  if (/^ENTER_|ENTRANCE_RAMP/.test(m)) return { type:'on ramp', modifier: side ? 'slight '+side : 'straight' };
+  if (/EXIT/.test(m)) return { type:'off ramp', modifier:'slight '+(side || 'right') };
+  return { type:'continue', modifier: side ? 'slight '+side : 'straight' };
+}
+const TRAFFIC_SEG = [null, '#f7a21b', '#e8382d', '#a3171a', '#7a0f12'];
+function trafficSegs(R){
+  return (R.traffic || []).map(t => ({ ...t, color: t.cat === 'ROAD_CLOSURE' ? '#2b2b2b' : TRAFFIC_SEG[t.mag] || (t.delay > 30 ? '#f7a21b' : null) }))
+    .filter(t => t.color && t.b > t.a).map(t => ({ ...t, ll:R.coords.slice(t.a, t.b + 1) }));
+}
+
+/* ---------- faster-route checks while driving (TomTom only) ---------- */
+let fasterT = null;
+function startFasterChecks(){
+  clearInterval(fasterT);
+  if (S.nav?.route.engine !== 'tomtom') return;
+  fasterT = setInterval(async () => {
+    const n = S.nav; if (!n || !S.pos || n.rerouting || S.sim || n.remT == null || n.remT < 300) return;
+    try{
+      const [r] = await fetchTomTom(S.pos, S.dest.ll, false);
+      if (S.nav !== n) return;
+      const save = n.remT - r.duration;
+      if (save > Math.max(180, n.remT * .08)){
+        n.route = r; n.spoken = {}; n.off = 0; n.along = 0; drawNavRoute();
+        const mins = Math.round(save / 60);
+        say(`Faster route found. Saving ${mins} minute${mins === 1 ? '' : 's'}.`); toast(`Faster route found · saves ${mins} min`, 4500);
+      }
+    }catch{}
+  }, 180000);
+}
+
+/* ---------- lane guidance (OSRM intersections) ---------- */
+function laneSVG(ind){
+  const a = ind === 'uturn' ? null : DIR_ANG[ind] ?? 0;
+  if (a === null) return '<svg viewBox="0 0 24 32" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 30V14a5 5 0 0 0-10 0v6"/><path d="M2.5 16.5L6 21l3.5-4.5"/></svg>';
+  return `<svg viewBox="0 0 24 32" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 30V20"/><g transform="rotate(${a} 12 20)"><path d="M12 20V5"/><path d="M6.5 10.5L12 5l5.5 5.5"/></g></svg>`;
+}
+function renderLanes(step, toNext){
+  const el = $('#bLanes'), lanes = step?.intersections?.[0]?.lanes;
+  if (!lanes || lanes.length < 2 || toNext > 1600 || S.nav?.rerouting){ el.hidden = true; return; }
+  const mod = step.maneuver.modifier || 'straight';
+  el.innerHTML = lanes.map(l => {
+    const ind = (l.valid && l.indications.includes(mod)) ? mod : (l.indications[0] || 'straight');
+    return `<span class="lane${l.valid ? ' on' : ''}">${laneSVG(ind === 'none' ? 'straight' : ind)}</span>`;
+  }).join('');
+  el.hidden = false;
+}
+
+/* ---------- trip controls: mute, overview, trip sheet, share ETA ---------- */
+const ICON_VOL = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICON_MUTE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function renderMute(){ const b = $('#btnMute'); b.innerHTML = settings.voice ? ICON_VOL : ICON_MUTE; b.setAttribute('aria-label', settings.voice ? 'Mute voice' : 'Unmute voice'); b.classList.toggle('off', !settings.voice); }
+$('#btnMute').onclick = () => { settings.voice = !settings.voice; saveSettings(); if (!settings.voice) speechSynthesis?.cancel?.(); renderMute(); toast(settings.voice ? 'Voice on' : 'Voice muted', 1500); };
+$('#btnOverview').onclick = () => {
+  const n = S.nav; if (!n) return;
+  S.follow = false; $('#btnRecenter').hidden = false;
+  const rest = n.route.coords.slice(Math.max(0, snap(n.route, S.pos || n.route.coords[0], n.along - 150).i));
+  map.fitBounds(L.latLngBounds(rest.concat(S.pos ? [S.pos] : [])), { paddingTopLeft:[40, $('#top').offsetHeight + 30], paddingBottomRight:[80, $('#navbar').offsetHeight + 40] });
+};
+function shareText(){
+  const n = S.nav, d = S.dest; if (!d) return '';
+  const eta = n?.remT != null ? clock(n.remT) : '';
+  return `I’m heading to ${d.name}${eta ? ', arriving around '+eta : ''}. https://www.openstreetmap.org/?mlat=${d.lat.toFixed(5)}&mlon=${d.lng.toFixed(5)}#map=16/${d.lat.toFixed(5)}/${d.lng.toFixed(5)}`;
+}
+async function shareETA(){
+  const text = shareText(); if (!text) return;
+  try{ if (navigator.share){ await navigator.share({ title:'My ETA', text }); return; } }catch(e){ if (e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(text); toast('ETA copied. Paste it in a message.'); }
+  catch{ openModal(`<h3 class="label" style="margin-top:0">Share your ETA</h3><textarea class="share-txt" id="shareTxt" readonly>${esc(text)}</textarea><p class="fine">Copy this text and send it.</p>`); $('#shareTxt').select(); }
+}
+function renderTrip(){
+  const n = S.nav; if (!n) return;
+  const R = n.route, k = n.k || 0;
+  const delay = R.engine === 'tomtom' ? (R.delay > 60 ? `<span class="delay bad">+${fmtDur(R.delay)} traffic</span>` : '<span class="delay ok">Light traffic</span>') : '';
+  const items = R.steps.slice(k + 1).map((s, i) => {
+    const idx = k + 1 + i, d = Math.max(0, R.stepStart[idx] - n.along);
+    return `<li class="st"><span class="st-ico">${turnSVG(s)}</span><span class="row-txt"><b>${esc(instr(s))}</b></span><span class="row-d">${fd(d)}</span></li>`;
+  }).join('');
+  openModal(`<div class="trip-head"><div><b>${n.remT != null ? clock(n.remT) : '--'}</b><span>arrival</span></div>
+      <div><b>${n.remT != null ? fmtDur(n.remT) : '--'}</b><span>${n.remD != null ? fd(n.remD) : ''}</span></div>${delay}</div>
+    <div class="pv-actions"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="overview">Overview</button></div>
+    ${wxRouteHTML(R)}
+    <h3 class="label">Turns ahead</h3><ol class="steps">${items}</ol>`);
+}
+$('#tripBtn').onclick = renderTrip;
+mSheet.addEventListener('click', e => {
+  const b = e.target.closest('[data-trip]'); if (!b) return;
+  if (b.dataset.trip === 'share') shareETA();
+  if (b.dataset.trip === 'overview'){ closeModal(); $('#btnOverview').click(); }
+});
+
+/* ---------- route options (avoid) ---------- */
+function renderRouteOpts(){
+  openModal(`<h3 class="label" style="margin-top:0">Route options</h3>
+    ${trafficKey() ? tg('trafficRouting', 'Use live traffic', 'Route around jams with TomTom, and check for faster routes while you drive') :
+      '<p class="hint" style="margin-top:0">Add a TomTom key under Layers › Live traffic to route around traffic.</p>'}
+    ${tg('avoidTolls', 'Avoid tolls', 'Skip toll roads where there’s another way')}
+    ${tg('avoidHighways', 'Avoid highways', 'Stay off motorways and freeways')}
+    ${tg('avoidFerries', 'Avoid ferries', 'Never route onto a ferry')}
+    ${tg('avoidUnpaved', 'Avoid unpaved roads', trafficKey() && settings.trafficRouting ? 'Stay on paved roads' : 'Works only with live-traffic routing')}`);
+  mSheet.dataset.view = 'routeopts';
+}
+
+/* ---------- weather: NEXRAD radar, NWS storm warnings, conditions ---------- */
+map.createPane('radar').style.zIndex = 240; map.getPane('radar').style.pointerEvents = 'none';
+map.createPane('warnings').style.zIndex = 395;
+const RADAR = { layers:[], labels:[], timer:null, refresh:null, frame:0, sig:null, hold:0 };
+function applyRadar(){
+  const sig = settings.ovRadar ? (settings.radarAnim ? 'anim' : 'still') : '';
+  if (sig === RADAR.sig) return;
+  RADAR.sig = sig;
+  RADAR.layers.forEach(l => map.removeLayer(l)); RADAR.layers = [];
+  clearInterval(RADAR.timer); clearInterval(RADAR.refresh);
+  if (sig){
+    const frames = sig === 'anim' ? ['-m50m','-m45m','-m40m','-m35m','-m30m','-m25m','-m20m','-m15m','-m10m','-m05m',''] : [''];
+    const opt = { pane:'radar', maxZoom:19, ts:() => Math.floor(Date.now() / 300000),
+      attribution:'Radar: NWS NEXRAD via <a href="https://mesonet.agron.iastate.edu">Iowa Environmental Mesonet</a>' };
+    RADAR.layers = frames.map((f, i) => L.tileLayer(`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913${f}/{z}/{x}/{y}.png?t={ts}`,
+      { ...opt, opacity: i === frames.length - 1 ? .7 : 0, attribution: i ? '' : opt.attribution }).addTo(map));
+    RADAR.labels = frames.map(f => f ? '−'+parseInt(f.slice(2), 10)+' min' : 'Now');
+    RADAR.frame = frames.length - 1;
+    if (sig === 'anim') RADAR.timer = setInterval(() => {
+      if (RADAR.frame === RADAR.layers.length - 1 && RADAR.hold++ < 3) return;   // linger on the latest frame
+      RADAR.hold = 0;
+      RADAR.layers[RADAR.frame].setOpacity(0);
+      RADAR.frame = (RADAR.frame + 1) % RADAR.layers.length;
+      RADAR.layers[RADAR.frame].setOpacity(.7);
+      renderWxChip();
+    }, 450);
+    RADAR.refresh = setInterval(() => RADAR.layers.forEach(l => l.redraw()), 300000);
+  }
+  renderWxChip();
+}
+const WARN_EVENTS = { 'Tornado Warning':'#ff0000', 'Severe Thunderstorm Warning':'#ffa500', 'Flash Flood Warning':'#8b0000',
+  'Extreme Wind Warning':'#ff8c00', 'Snow Squall Warning':'#c71585', 'Dust Storm Warning':'#c8a165', 'Special Marine Warning':'#ffa500' };
+const WX = { layer:L.layerGroup(), alerts:[], timer:null, told:new Set(), lastCheck:0, cond:null, condAt:0, condPos:null, condBusy:false };
+function applyWarnings(){
+  if (settings.ovWarnings){
+    WX.layer.addTo(map);
+    if (!WX.timer){ loadWarnings(); WX.timer = setInterval(loadWarnings, 120000); }
+  } else {
+    map.removeLayer(WX.layer); clearInterval(WX.timer); WX.timer = null; WX.alerts = []; WX.layer.clearLayers(); renderWxAlert();
+  }
+}
+async function loadWarnings(){
+  try{
+    const r = await fetch('https://api.weather.gov/alerts/active?status=actual&event='+encodeURIComponent(Object.keys(WARN_EVENTS).join(',')),
+      { headers:{ Accept:'application/geo+json' } });
+    if (!r.ok) return;
+    const j = await r.json();
+    WX.alerts = (j.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type)).map(f => {
+      const polys = (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).map(p => p.map(ring => ring.map(c => [c[1], c[0]])));
+      return { id:f.id, p:f.properties, polys, color:WARN_EVENTS[f.properties.event] || '#ff5a00' };
+    });
+    WX.layer.clearLayers();
+    for (const a of WX.alerts){
+      L.polygon(a.polys, { pane:'warnings', color:a.color, weight:2.5, opacity:.95, fillColor:a.color, fillOpacity:.13 })
+        .bindPopup(() => warnPopup(a), { maxWidth:300 }).addTo(WX.layer);
+    }
+    checkWx(true);
+    if (S.dest && !S.nav && S.routes.length) renderPreview();
+  }catch{}
+}
+const untilTxt = iso => iso ? new Date(iso).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : '';
+function warnPopup(a){
+  const p = a.p;
+  return `<div class="pop"><b style="color:${a.color === '#ffa500' ? '#c77700' : a.color}">${esc(p.event)}</b><small>Until ${untilTxt(p.expires || p.ends)} · ${esc(p.senderName || 'NWS')}</small>
+    <p class="wx-head">${esc(p.headline || '')}</p><div class="wx-desc">${esc((p.description || '').trim())}</div>
+    ${p.instruction ? `<div class="wx-desc wx-ins">${esc(p.instruction.trim())}</div>` : ''}</div>`;
+}
+function inRing(pt, ring){
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++){
+    const [yi, xi] = ring[i], [yj, xj] = ring[j];
+    if ((yi > pt[0]) !== (yj > pt[0]) && pt[1] < (xj - xi) * (pt[0] - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const inAlert = (pt, a) => a.polys.some(poly => inRing(pt, poly[0]) && !poly.slice(1).some(h => inRing(pt, h)));
+function alertsOnRoute(R, fromIdx = 0){
+  if (!WX.alerts.length || !R) return [];
+  const pts = []; for (let i = fromIdx; i < R.coords.length; i += 6) pts.push(R.coords[i]);
+  return WX.alerts.filter(a => pts.some(p => inAlert(p, a)));
+}
+function wxRouteHTML(R){
+  const hits = alertsOnRoute(R, S.nav ? snap(R, S.pos || R.coords[0], S.nav.along - 150).i : 0);
+  if (!hits.length) return '';
+  const names = [...new Set(hits.map(a => a.p.event))];
+  return `<div class="wx-route"><i style="background:${hits[0].color}"></i><span><b>Route crosses ${names.length === 1 ? 'a '+esc(names[0]) : esc(names.join(', '))}</b>
+    <small>${hits.length} active NWS warning${hits.length === 1 ? '' : 's'} along the way</small></span></div>`;
+}
+function checkWx(force){
+  if (!settings.ovWarnings || !S.pos || (!force && Date.now() - WX.lastCheck < 15000)) return;
+  WX.lastCheck = Date.now();
+  const here = WX.alerts.filter(a => inAlert(S.pos, a));
+  for (const a of here) if (!WX.told.has(a.id)){
+    WX.told.add(a.id);
+    say(`Weather alert. You are inside a ${a.p.event}, until ${untilTxt(a.p.expires || a.p.ends)}.`);
+    toast(`You are inside a ${a.p.event}`, 6000);
+  }
+  if (S.nav){
+    const ahead = alertsOnRoute(S.nav.route, snap(S.nav.route, S.pos, S.nav.along - 150).i).filter(a => !here.includes(a));
+    for (const a of ahead) if (!WX.told.has('ahead:'+a.id)){ WX.told.add('ahead:'+a.id); say(`${a.p.event} on your route ahead.`); }
+    WX.ahead = ahead;
+  } else WX.ahead = [];
+  WX.here = here; renderWxAlert();
+}
+function renderWxAlert(){
+  const el = $('#wxAlert'), a = (WX.here || [])[0], b = (WX.ahead || [])[0];
+  const pick = a || b;
+  if (!pick || !settings.ovWarnings){ el.hidden = true; return; }
+  el.style.setProperty('--wc', pick.color);
+  el.innerHTML = `<i></i><span><b>${esc(pick.p.event)}</b> ${a ? 'here' : 'on your route'} · until ${untilTxt(pick.p.expires || pick.p.ends)}</span>`;
+  el.onclick = () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; map.fitBounds(L.polygon(pick.polys).getBounds(), { padding:[40, 40] }); L.popup({ maxWidth:300 }).setLatLng(L.polygon(pick.polys).getBounds().getCenter()).setContent(warnPopup(pick)).openOn(map); };
+  el.hidden = false;
+}
+/* current conditions + forecast at arrival (Open-Meteo, keyless) */
+const WMO = c => c === 0 ? ['Clear','sun'] : c <= 2 ? ['Partly cloudy','part'] : c === 3 ? ['Cloudy','cloud'] : c <= 48 ? ['Fog','fog']
+  : c <= 57 ? ['Drizzle','rain'] : c <= 67 ? ['Rain','rain'] : c <= 77 ? ['Snow','snow'] : c <= 82 ? ['Showers','rain'] : c <= 86 ? ['Snow showers','snow'] : ['Thunderstorms','storm'];
+const WXI = {
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
+  part:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="4" opacity=".55"/><path d="M8 20a4.5 4.5 0 0 1 .5-9 6 6 0 0 1 11.4 2.2A3.5 3.5 0 0 1 19 20z"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 19a4.5 4.5 0 0 1 .5-9 6 6 0 0 1 11.4 2.2A3.5 3.5 0 0 1 17.5 19z"/></svg>',
+  fog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9h16M3 13h18M5 17h14"/></svg>',
+  rain:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 14a4.5 4.5 0 0 1 .5-9 6 6 0 0 1 11.4 2.2A3.5 3.5 0 0 1 17.5 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  snow:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 14a4.5 4.5 0 0 1 .5-9 6 6 0 0 1 11.4 2.2A3.5 3.5 0 0 1 17.5 14z"/><circle cx="8" cy="18" r="1.3"/><circle cx="12" cy="20" r="1.3"/><circle cx="16" cy="18" r="1.3"/></svg>',
+  storm:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 14a4.5 4.5 0 0 1 .5-9 6 6 0 0 1 11.4 2.2A3.5 3.5 0 0 1 17.5 14z"/><path d="M12.5 13L9 18.5h3l-1 4 4-6h-3z"/></svg>'
+};
+const tempU = () => imperial() ? 'fahrenheit' : 'celsius';
+async function refreshConditions(force){
+  const p = S.pos || [map.getCenter().lat, map.getCenter().lng];
+  if (WX.condBusy || (!force && WX.condPos && dist(WX.condPos, p) < 8000 && Date.now() - WX.condAt < 600000)) return;
+  WX.condBusy = true;
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p[0].toFixed(3)}&longitude=${p[1].toFixed(3)}&current=temperature_2m,weather_code,wind_speed_10m,is_day&temperature_unit=${tempU()}&wind_speed_unit=${imperial() ? 'mph' : 'kmh'}`);
+    const j = await r.json();
+    if (j.current){ WX.cond = j.current; WX.condAt = Date.now(); WX.condPos = p; renderWxChip(); }
+  }catch{}
+  WX.condBusy = false;
+}
+function renderWxChip(){
+  const el = $('#wx'), c = WX.cond;
+  const radar = RADAR.sig === 'anim' ? `<em>${RADAR.labels[RADAR.frame] || ''}</em>` : '';
+  if (!c){ el.hidden = !radar; el.innerHTML = radar ? `<span>Radar</span>${radar}` : ''; return; }
+  const [label, icon] = WMO(c.weather_code);
+  el.innerHTML = `${WXI[icon === 'sun' && !c.is_day ? 'cloud' : icon]}<b>${Math.round(c.temperature_2m)}°</b>${radar}`;
+  el.title = `${label}, wind ${Math.round(c.wind_speed_10m)} ${imperial() ? 'mph' : 'km/h'}`;
+  el.hidden = false;
+}
+$('#wx').onclick = () => { const c = WX.cond; if (c) toast(`${WMO(c.weather_code)[0]} · ${Math.round(c.temperature_2m)}° · wind ${Math.round(c.wind_speed_10m)} ${imperial() ? 'mph' : 'km/h'}`); };
+async function destWeather(d, secs){
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${d.lat.toFixed(3)}&longitude=${d.lng.toFixed(3)}&hourly=temperature_2m,weather_code,precipitation_probability&forecast_hours=48&timeformat=unixtime&temperature_unit=${tempU()}`);
+    const j = await r.json(), h = j.hourly; if (!h?.time?.length) return null;
+    const t = Date.now() / 1000 + (secs || 0);
+    let k = 0; for (let i = 0; i < h.time.length; i++) if (Math.abs(h.time[i] - t) < Math.abs(h.time[k] - t)) k = i;
+    const [label, icon] = WMO(h.weather_code[k]);
+    return { label, icon, temp:Math.round(h.temperature_2m[k]), pop:h.precipitation_probability?.[k] };
+  }catch{ return null; }
+}
+
+/* ---------- parked car ---------- */
+const parkIcon = L.divIcon({ className:'park', iconSize:[32,32], iconAnchor:[16,16], html:'<div>P</div>' });
+let parkMarker = null;
+function drawPark(){
+  const p = store.get('parked');
+  if (parkMarker){ map.removeLayer(parkMarker); parkMarker = null; }
+  if (!p) return;
+  parkMarker = L.marker([p.lat, p.lng], { icon:parkIcon, zIndexOffset:500 }).addTo(map)
+    .bindPopup(() => { const m = Math.round((Date.now() - p.t) / 60000);
+      return `<div class="pop"><b>Your parked car</b><small>Parked ${m < 1 ? 'just now' : m < 60 ? m+' min ago' : fmtDur(m * 60)+' ago'}</small><br>
+        <button class="go" data-park="go">Directions</button> &nbsp; <button data-park="clear">Clear</button></div>`; });
+}
+function askPark(){
+  const ll = S.pos || [map.getCenter().lat, map.getCenter().lng];
+  closeModal();
+  startPlace({ ll, icon:parkIcon, color:'#2557c9', badge:'<b style="font:800 18px var(--font)">P</b>', title:'Save parking spot here?', okLabel:'Save spot',
+    onConfirm: p => { store.set('parked', { lat:p.lat, lng:p.lng, t:Date.now() }); drawPark(); toast('Parking spot saved'); } });
+}
+map.on('popupopen', e => {
+  const el = e.popup.getElement(); if (!el) return;
+  el.querySelectorAll('[data-park]').forEach(b => b.onclick = () => {
+    const p = store.get('parked'); map.closePopup(); if (!p) return;
+    if (b.dataset.park === 'go') previewPlace({ name:'Parked car', addr:'Your saved parking spot', lat:p.lat, lng:p.lng });
+    else { store.set('parked', null); drawPark(); toast('Parking spot cleared'); }
+  });
+});
+
+/* ---------- voice search ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR){
+  const mic = $('#micBtn'); mic.hidden = false;
+  let rec = null;
+  mic.onclick = () => {
+    if (rec){ rec.stop(); return; }
+    try{
+      rec = new SR(); rec.lang = navigator.language || 'en-US'; rec.interimResults = true; rec.maxAlternatives = 1;
+      mic.classList.add('listening'); q.placeholder = 'Listening…';
+      rec.onresult = e => { const t = Array.from(e.results).map(r => r[0].transcript).join(''); q.value = t; $('#clearQ').hidden = !t;
+        if (e.results[e.results.length - 1].isFinal && t.trim()) search(t.trim()); };
+      rec.onerror = e => { if (e.error === 'not-allowed') toast('Microphone access is blocked for this site.'); };
+      rec.onend = () => { mic.classList.remove('listening'); q.placeholder = 'Where to?'; rec = null; };
+      rec.start();
+    }catch{ rec = null; mic.classList.remove('listening'); toast('Voice search isn’t available in this browser.'); }
+  };
+}
+
 /* ---------- boot ---------- */
-applyTheme(); renderIdle(); drawReports(); updateSpeedo(); startGPS();
+applyTheme(); renderIdle(); drawReports(); drawPark(); renderMute(); updateSpeedo(); startGPS(); refreshConditions(true);
 // Android grants orientation without a prompt, so restore the compass; iOS needs a tap each visit.
 if (store.get('compass', false) && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') compassOn();
 </script>
