@@ -340,6 +340,48 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 /* Compass in heading-up mode */
 .compass.hdg{box-shadow:var(--shadow),inset 0 0 0 2.5px var(--route)}
 
+/* Trip details: weather strip + elevation */
+.pv-trip:empty{display:none}
+.ws{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(52px,1fr);gap:6px;overflow-x:auto;padding-bottom:2px}
+.ws-c{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel-2);border-radius:10px;padding:7px 4px}
+.ws-c small{font:700 10.5px var(--font);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ws-c .ws-p{color:var(--route)}
+.ws-i svg{width:22px;height:22px;color:var(--muted)}
+.ws-c b{font:700 15px var(--mono);font-variant-numeric:tabular-nums}
+.ws-haz{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:700;color:var(--danger)}
+.ws-haz i{width:10px;height:10px;border-radius:50%;background:var(--danger);flex:none}
+.elev{display:block;width:100%;height:56px;max-width:100%}
+.elev-a{fill:color-mix(in srgb,var(--guide) 22%,transparent)}
+.elev-l{fill:none;stroke:var(--guide);stroke-width:2;vector-effect:non-scaling-stroke}
+.elev-t{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 0;font-size:13px;color:var(--muted)}
+.elev-t b{color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.route-opt .rt-extra{grid-column:1/-1;font:700 12px var(--font);color:var(--muted)}
+/* Vehicle inputs */
+.num-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.num-row label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px}
+.num-row span{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600}
+.num-row input{width:100%;min-width:0;height:42px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);color:var(--ink);padding:0 10px;font:600 15px var(--mono)}
+.cam-pin svg{width:13px;height:13px}
+/* Windshield HUD: deliberately one dark look, high contrast */
+#hudv{position:fixed;inset:0;z-index:950;background:#000;color:#5cf2b0;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px))}
+#hudv .h-in{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2vh;text-align:center}
+#hudv .h-in.mirror{transform:scaleY(-1)}
+#hudv .h-turn{display:flex;align-items:center;gap:4vw}
+#hudv .h-icon{width:min(30vw,26vh);height:min(30vw,26vh)}
+#hudv .h-icon svg{width:100%;height:100%}
+#hudv .h-icon svg circle[fill="var(--guide)"]{fill:#000}
+#hudv .h-dist{font:700 min(16vw,15vh)/1 var(--mono);font-variant-numeric:tabular-nums}
+#hudv .h-dist small{font:800 .35em var(--font);margin-left:.15em}
+#hudv .h-street{font:800 min(7vw,6vh)/1.15 var(--font);max-width:90vw;text-wrap:balance}
+#hudv .h-row{display:flex;align-items:baseline;gap:6vw}
+#hudv .h-spd b{font:700 min(20vw,18vh)/1 var(--mono);font-variant-numeric:tabular-nums}
+#hudv .h-spd small{font:800 min(5vw,4vh) var(--font);margin-left:.3em}
+#hudv.over .h-spd{color:#ff4d4d}
+#hudv .h-eta{font:700 min(6vw,5vh) var(--mono);color:#9fb8ad}
+#hudv .h-bar{display:flex;gap:10px;justify-content:center}
+#hudv .h-bar button{height:44px;padding:0 18px;border-radius:12px;background:#151a18;color:#cfe;font-weight:700;border:1px solid #2a3330}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -406,6 +448,14 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 </section>
 
 <section id="place" hidden aria-live="polite"></section>
+<div id="hudv" hidden>
+  <div class="h-in">
+    <div class="h-turn"><div id="hIcon" class="h-icon"></div><div id="hDist" class="h-dist"></div></div>
+    <div id="hStreet" class="h-street"></div>
+    <div class="h-row"><span class="h-spd"><b id="hSpd">0</b><small id="hSpdU">mph</small></span><span id="hEta" class="h-eta"></span></div>
+  </div>
+  <div class="h-bar"><button data-h="mirror">Flip for windshield</button><button data-h="exit">Exit HUD</button></div>
+</div>
 <div id="modal" hidden><section class="sheet" id="modalSheet"></section></div>
 <div id="toast" hidden role="status"></div>
 
@@ -438,7 +488,8 @@ const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', bas
   ovOffroad:true, ovHike:false, ovMtb:false, ovReports:true,
   srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
   trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true,
-  orient:'heading', useCompass:false, speedAlert:true }, store.get('settings', {}));
+  orient:'heading', useCompass:false, speedAlert:true,
+  camAlerts:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 const mq = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => {
@@ -479,6 +530,7 @@ const shortAddr = a => String(a||'').split(',').slice(1,4).join(',').trim();
 
 /* ---------- icons ---------- */
 const ico = {
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>',
   pin:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
   clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
   home:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg>',
@@ -709,13 +761,14 @@ function updateSpeedo(){
   const v = speedDisp(S.speed);
   $('#spd').textContent = v; $('#spdU').textContent = imperial() ? 'mph' : 'km/h';
   const lim = $('#limit');
-  if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); return; }
+  if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
   const lv = imperial() ? Math.round(S.limitKmh/1.609344/5)*5 : Math.round(S.limitKmh);
   lim.hidden = false; lim.classList.toggle('metric', !imperial());
   $('#limitVal').textContent = lv;
   const over = v > lv + (imperial() ? 4 : 6);
   lim.classList.toggle('over', over); $('#speedo').classList.toggle('over', over);
   if (over && !S.wasOver && S.speed > 4) chime();
+  if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; $('#hudv').classList.toggle('over', over); }
   S.wasOver = over;
 }
 let slLast = 0, slBusy = false;
@@ -788,6 +841,7 @@ function renderIdle(){
       <button class="chip" data-saved="work">${ico.work}<span><b>Work</b><small>${w ? esc(w.name) : 'Not set'}</small></span></button>
     </div>
     <div class="cats">${Object.entries(CATS).map(([k, C]) => `<button class="cat" data-cat="${k}"><i style="background:${C.color}">${C.svg}</i>${C.label}</button>`).join('')}</div>
+    ${favs().length ? `<h3 class="label">Saved</h3><ul class="list">${favs().map((p, i) => row(p, 'fav', i, ico.star)).join('')}</ul>` : ''}
     ${rec.length ? `<h3 class="label">Recent</h3><ul class="list">${rec.map((p, i) => row(p, 'rec', i, ico.clock)).join('')}</ul>`
                  : '<p class="hint">Search for a place, or press and hold anywhere on the map to drop a pin.</p>'}`);
 }
@@ -800,33 +854,25 @@ function renderPreview(state){
     const R0 = S.routes[S.routeIdx];
     body = `<ul class="routes">${S.routes.map((r, i) => `<li><button class="route-opt${i === S.routeIdx ? ' on' : ''}" data-route="${i}">
       <b>${fmtDur(r.duration)}</b><span>${fd(r.distance)} · via ${esc(r.via)}</span>${i === 0 ? '<em>Fastest</em>' : '<em></em>'}
-      ${r.engine === 'tomtom' ? `<small class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</small>` : ''}</button></li>`).join('')}</ul>
+      ${routeExtra(r)}</button></li>`).join('')}</ul>
     ${S.stop ? `<p class="hint">Stopping at <b>${esc(S.stop.name)}</b> on the way</p>` : ''}
     ${R0?.note ? `<p class="hint">${esc(R0.note)}</p>` : ''}
     ${wxRouteHTML(R0)}
-    <div class="pv-wx" id="pvWx"></div>
-    <div class="pv-actions"><button class="btn primary" data-act="go">Go</button><button class="btn" data-act="sim">Simulate</button></div>`;
+    <div class="pv-actions"><button class="btn primary" data-act="go">Go</button><button class="btn" data-act="sim">Simulate</button></div>
+    <div id="pvTrip" class="pv-trip"></div>`;
   }
   sheetHTML(`<div class="grab"></div>
     <div class="pv-head"><div class="row-txt"><b class="pv-name">${esc(p.name)}</b><small>${esc(shortAddr(p.addr) || p.addr || '')}</small></div>
       <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
     ${body}
-    <div class="pv-save"><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button><button class="link" data-act="opts">Route options</button><button class="link" data-act="addstop">${S.stop ? 'Change stop' : 'Add a stop'}</button></div>`);
+    <div class="pv-save"><button class="link" data-act="fav">${isFav(p) ? '★ Saved' : '☆ Save'}</button><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button><button class="link" data-act="opts">Route options</button><button class="link" data-act="addstop">${S.stop ? 'Change stop' : 'Add a stop'}</button></div>`);
   const R0 = S.routes[S.routeIdx];
-  if (R0 && !state){
-    const want = p.lat+','+p.lng+','+Math.round(R0.duration / 900);
-    if (S.pvWx?.key === want) fillPvWx(S.pvWx.w);
-    else destWeather(p, R0.duration).then(w => { S.pvWx = { key:want, w }; if (S.dest === p) fillPvWx(w); });
-  }
-}
-function fillPvWx(w){
-  const el = $('#pvWx'); if (!el || !w) return;
-  const R0 = S.routes[S.routeIdx];
-  el.innerHTML = `<span class="pvw-i">${WXI[w.icon]}</span><span><b>${w.temp}° · ${esc(w.label)}</b><small>Forecast at arrival${R0 ? ' ('+clock(R0.duration)+')' : ''}${w.pop ? ' · '+w.pop+'% chance of precipitation' : ''}</small></span>`;
+  if (R0 && !state) fillTripDetails(R0);
 }
 sheet.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.cat) return searchCat(b.dataset.cat);
+  if (b.dataset.kind === 'fav') return previewPlace(favs()[+b.dataset.i]);
   if (b.dataset.kind) return previewPlace(S.list[+b.dataset.i]);
   if (b.dataset.saved){ const p = store.get(b.dataset.saved); return p ? previewPlace(p) : toast('Search for a place, then tap “Set as '+(b.dataset.saved === 'home' ? 'Home' : 'Work')+'”.'); }
   if (b.dataset.route){ S.routeIdx = +b.dataset.route; drawRoutes(); renderPreview(); return; }
@@ -837,6 +883,7 @@ sheet.addEventListener('click', e => {
   else if (act === 'sim') startNav(true);
   else if (act === 'opts') renderRouteOpts();
   else if (act === 'addstop') renderAddStop();
+  else if (act === 'fav'){ toggleFav(S.dest); renderPreview(); }
   else if (act === 'park') askPark();
   else if (act === 'sethome' || act === 'setwork'){ store.set(act.slice(3), S.dest); toast((act === 'sethome' ? 'Home' : 'Work')+' saved'); }
 });
@@ -963,7 +1010,7 @@ async function dropPinConfirmed(ll){
 function startNav(simulate){
   const route = S.routes[S.routeIdx]; if (!route) return;
   cancelPlace(); addRecent(S.dest);
-  S.nav = { route, spoken:{}, off:0, lastReroute:0, along:0, k:0, rerouting:false, remT:route.duration, remD:route.total };
+  S.nav = { route, spoken:{}, off:0, lastReroute:0, along:0, k:0, rerouting:false, remT:route.duration, remD:route.total, t0:Date.now(), driven:0, lastPos:S.pos };
   renderMute(); WX.told.forEach(id => { if (String(id).startsWith('ahead:')) WX.told.delete(id); });
   routeLayer.clearLayers(); drawNavRoute();
   $('#searchbar').hidden = true; $('#banner').hidden = false;
@@ -979,6 +1026,7 @@ function startNav(simulate){
   startFasterChecks(); checkWx(true);
 }
 function drawNavRoute(){
+  if (CAM.route !== S.nav.route){ CAM.route = S.nav.route; loadCameras(S.nav.route); }
   if (navLine) map.removeLayer(navLine); if (navCasing) map.removeLayer(navCasing);
   const c = S.nav.route.coords;
   navCasing = L.polyline(c, { color:css('--casing'), weight:13, interactive:false }).addTo(map);
@@ -1018,6 +1066,8 @@ function navTick(){
   let remT = R.steps[k].duration * (stepLen > 0 ? Math.max(0, Math.min(1, (stepEnd - s.along)/stepLen)) : 0);
   for (let i = k+1; i < R.steps.length; i++) remT += R.steps[i].duration;
   n.remT = remT; n.remD = remD;
+  if (n.lastPos){ const dd = dist(n.lastPos, S.pos); if (dd < 300) n.driven += dd; } n.lastPos = S.pos;
+  checkCameras(s.along);
   n.routeBrg = s.d < 35 ? bearing(s.pt, pointAt(R, s.along + 35).pt) : null;
   if (S.stop){ const w = R.steps.findIndex(st => st.waypoint); if (w >= 0 && s.along > R.stepStart[w] + 40){ S.stop = null; drawStop(); toast('Stop reached'); } }
   renderNav(next, toNext, remD, remT);
@@ -1037,6 +1087,7 @@ function renderNav(k, toNext, remD, remT){
   else $('#bThen').hidden = true;
   renderLanes(step, toNext);
   $('#eta').textContent = clock(remT); $('#remT').textContent = fmtDur(remT); $('#remD').textContent = fd(remD);
+  if (!$('#hudv').hidden){ $('#hIcon').innerHTML = turnSVG(step); $('#hDist').innerHTML = `${d.v}<small>${d.u}</small>`; $('#hStreet').textContent = instr(step); $('#hEta').textContent = clock(remT)+' · '+fd(remD); }
 }
 function speakGuidance(k, toNext){
   const n = S.nav, R = n.route, step = R.steps[k];
@@ -1070,12 +1121,15 @@ async function reroute(force){
 function arrive(){
   const name = S.dest?.name || 'your destination';
   if (!S.nav.spoken.arrived) say('You have arrived at '+name);
+  S.nav.arrived = true;
   endNav(true);
   sheetHTML(`<div class="grab"></div><div class="pv-head"><div class="row-txt"><b class="pv-name">You’ve arrived</b><small>${esc(name)}</small></div>
     <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
     <div class="pv-actions"><button class="btn primary" data-act="park">Save parking spot</button><button class="btn" data-act="close">Done</button></div>`);
 }
 function endNav(keepDest){
+  logTrip(S.nav); hudClose();
+  CAM.list = []; CAM.layer.clearLayers(); CAM.route = null;
   stopSim(); keepAwake(false); clearInterval(fasterT);
   S.stop = null; drawStop();
   if (S.nav?.tLayer) map.removeLayer(S.nav.tLayer);
@@ -1199,8 +1253,16 @@ function renderLayers(){
     ${store.get('parked') ? `<button class="tg" data-tool="parkgo"><span class="row-txt"><b>Go to parked car</b><small>Route back to your saved spot</small></span><span class="park-badge">P</span></button>
       <button class="tg" data-tool="parkclear"><span class="row-txt"><b>Clear parking spot</b><small>Remove the P marker</small></span></button>`
       : `<button class="tg" data-tool="park"><span class="row-txt"><b>Save parking spot</b><small>Drop a P marker so you can find your car</small></span><span class="park-badge">P</span></button>`}
+    <button class="tg" data-tool="trips"><span class="row-txt"><b>Trip history</b><small>Your recent drives and weekly totals</small></span><span class="chev">›</span></button>
     <h3 class="label">Routing</h3>
     <button class="tg" data-tool="opts"><span class="row-txt"><b>Route options</b><small>${[trafficKey() && settings.trafficRouting ? 'Live traffic' : 'No traffic', settings.avoidTolls && 'no tolls', settings.avoidHighways && 'no highways', settings.avoidFerries && 'no ferries', settings.avoidUnpaved && 'no unpaved'].filter(Boolean).join(' · ')}</small></span><span class="chev">›</span></button>
+    <h3 class="label">Vehicle</h3>
+    <div class="num-row">
+      ${imperial() ? `<label>Fuel economy<span><input type="number" inputmode="decimal" step="0.1" min="0" id="nMpg" data-num="mpg" value="${settings.mpg || ''}"> mpg</span></label>
+        <label>Fuel price<span>${esc(settings.currency || '$')}<input type="number" inputmode="decimal" step="0.01" min="0" id="nPriceGal" data-num="priceGal" value="${settings.priceGal || ''}"> /gal</span></label>`
+      : `<label>Fuel use<span><input type="number" inputmode="decimal" step="0.1" min="0" id="nL100" data-num="l100" value="${settings.l100 || ''}"> L/100 km</span></label>
+        <label>Fuel price<span>${esc(settings.currency || '$')}<input type="number" inputmode="decimal" step="0.01" min="0" id="nPriceL" data-num="priceL" value="${settings.priceL || ''}"> /L</span></label>`}
+    </div>
     <h3 class="label">Settings</h3>
     <div class="set-row"><span>Units</span>${seg('units', [['imperial','Miles'],['metric','Kilometers']])}</div>
     <div class="set-row"><span>Voice guidance</span>${seg('voice', [['true','On'],['false','Off']])}</div>
@@ -1208,6 +1270,7 @@ function renderLayers(){
     <div class="set-row"><span>Map direction</span>${seg('orient', [['heading','Turns with you'],['north','North up']])}</div>
     ${tg('useCompass', 'Phone compass', 'Point the arrow, and the map, the way your phone faces when you’re stopped')}
     ${tg('speedAlert', 'Speeding chime', 'Play a tone when you go over the speed limit')}
+    ${tg('camAlerts', 'Speed camera alerts', 'Warn before speed and red light cameras mapped on OpenStreetMap')}
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
     <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
   mSheet.dataset.view = 'layers';
@@ -1228,6 +1291,7 @@ mSheet.addEventListener('click', e => {
   if (b.dataset.tool === 'parkgo'){ const p = store.get('parked'); closeModal(); if (p) previewPlace({ name:'Parked car', addr:'Your saved parking spot', lat:p.lat, lng:p.lng }); return; }
   if (b.dataset.tool === 'parkclear'){ store.set('parked', null); drawPark(); renderLayers(); toast('Parking spot cleared'); return; }
   if (b.dataset.tool === 'opts'){ renderRouteOpts(); return; }
+  if (b.dataset.tool === 'trips'){ renderTrips(); return; }
   if (b.dataset.tool === 'rec'){ if (REC.on) recStop(); else { closeModal(); recStart(); } return; }
   if (b.dataset.rec === 'save'){ saveGPX(); return; }
   if (b.dataset.rec === 'clear'){ if (REC.line){ map.removeLayer(REC.line); REC.line = null; } REC.pts = []; closeModal(); return; }
@@ -1240,7 +1304,7 @@ mSheet.addEventListener('click', e => {
     if (k === 'units'){ updateSpeedo(); updateAlt(); if (S.nav && S.pos) navTick(); else if (!S.nav) S.dest ? renderPreview() : renderIdle(); }
     if (k === 'voice' && !v) speechSynthesis?.cancel?.();
     if (k === 'voice') renderMute();
-    if (k === 'units'){ WX.condAt = 0; refreshConditions(true); S.pvWx = null; }
+    if (k === 'units'){ WX.condAt = 0; refreshConditions(true); S.routes.forEach(r => { r._wx = null; r._elev = null; }); }
     renderLayers(); return;
   }
   if (b.dataset.clear === 'places'){ ['home','work','recents'].forEach(k => store.set(k, null)); if (!S.dest && !S.nav) renderIdle(); toast('Saved places cleared'); }
@@ -1821,6 +1885,8 @@ function renderTrip(){
   openModal(`<div class="trip-head"><div><b>${n.remT != null ? clock(n.remT) : '--'}</b><span>arrival</span></div>
       <div><b>${n.remT != null ? fmtDur(n.remT) : '--'}</b><span>${n.remD != null ? fd(n.remD) : ''}</span></div>${delay}</div>
     <div class="pv-actions three"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="stop">${S.stop ? 'Change stop' : 'Add stop'}</button><button class="btn" data-trip="overview">Overview</button></div>
+    <button class="link" data-trip="hud">Windshield HUD</button>
+    ${CAM.list.length ? `<p class="hint">${CAM.list.filter(c => c.along > n.along).length} speed or red light cameras on this route</p>` : ''}
     ${S.stop ? `<p class="hint">Stop: <b>${esc(S.stop.name)}</b></p>` : ''}
     ${wxRouteHTML(R)}
     <h3 class="label">Turns ahead</h3><ol class="steps">${items}</ol>`);
@@ -1830,6 +1896,7 @@ mSheet.addEventListener('click', e => {
   const b = e.target.closest('[data-trip]'); if (!b) return;
   if (b.dataset.trip === 'share') shareETA();
   if (b.dataset.trip === 'stop') renderAddStop();
+  if (b.dataset.trip === 'hud') hudOpen();
   if (b.dataset.trip === 'overview'){ closeModal(); $('#btnOverview').click(); }
 });
 
@@ -2151,6 +2218,167 @@ function drawBubbles(){
       .on('click', () => { S.routeIdx = i; drawRoutes(); renderPreview(); }).addTo(routeLayer);
   });
 }
+
+/* ---------- trip details in the preview: weather along the route + elevation profile ---------- */
+const hazLabel = w => [56,57,66,67].includes(w.code) ? 'Freezing rain' : w.label;
+async function routeWeather(R){
+  const n = R.total > 20000 ? 6 : 2, pts = [];
+  for (let i = 0; i < n; i++){ const f = i / (n - 1); pts.push({ ll:pointAt(R, f * R.total).pt, secs:f * R.duration, along:f * R.total }); }
+  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pts.map(p => p.ll[0].toFixed(3)).join(',')}&longitude=${pts.map(p => p.ll[1].toFixed(3)).join(',')}`
+    + `&hourly=temperature_2m,weather_code,precipitation_probability,wind_gusts_10m&forecast_hours=48&timeformat=unixtime&temperature_unit=${tempU()}&wind_speed_unit=${imperial() ? 'mph' : 'kmh'}`);
+  let j = await r.json(); if (!Array.isArray(j)) j = [j];
+  return pts.map((p, i) => {
+    const h = j[i]?.hourly; if (!h?.time?.length) return null;
+    const t = Date.now() / 1000 + p.secs; let k = 0;
+    for (let x = 0; x < h.time.length; x++) if (Math.abs(h.time[x] - t) < Math.abs(h.time[k] - t)) k = x;
+    const [label, icon] = WMO(h.weather_code[k]);
+    return { ...p, label, icon, code:h.weather_code[k], temp:Math.round(h.temperature_2m[k]), pop:h.precipitation_probability?.[k] ?? null, gust:Math.round(h.wind_gusts_10m?.[k] ?? 0) };
+  }).filter(Boolean);
+}
+function wxStripHTML(wx){
+  if (!wx?.length) return '';
+  const gl = imperial() ? 40 : 65, wu = imperial() ? 'mph' : 'km/h';
+  const haz = wx.find(w => w.code >= 95 || (w.code >= 71 && w.code <= 77) || w.code === 85 || w.code === 86 || [56,57,66,67].includes(w.code) || w.gust >= gl);
+  return `<h3 class="label">Weather on the way</h3>
+    ${haz ? `<p class="ws-haz"><i></i>${esc(hazLabel(haz))}${haz.gust >= gl ? (haz.code >= 51 ? ' with ' : '') + 'gusts to '+haz.gust+' '+wu : ''} ${haz.along < 500 ? 'where you start' : 'about '+fd(haz.along)+' in'}</p>` : ''}
+    <div class="ws">${wx.map((w, i) => `<div class="ws-c" title="${esc(w.label)}"><small>${i === 0 ? 'Start' : i === wx.length - 1 ? 'Arrive' : fd(w.along)}</small>
+      <span class="ws-i">${WXI[w.icon]}</span><b>${w.temp}°</b><small class="ws-p">${w.pop != null && w.pop >= 20 ? w.pop+'%' : '&nbsp;'}</small></div>`).join('')}</div>`;
+}
+async function routeElevation(R){
+  if (R.total < 2000) return null;
+  const N = Math.min(100, Math.max(24, Math.round(R.total / 400))), pts = [];
+  for (let i = 0; i < N; i++) pts.push(pointAt(R, i / (N - 1) * R.total).pt);
+  const r = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${pts.map(p => p[0].toFixed(4)).join(',')}&longitude=${pts.map(p => p[1].toFixed(4)).join(',')}`);
+  const j = await r.json(), e = j.elevation; if (!e?.length) return null;
+  let climb = 0, desc = 0;
+  for (let i = 1; i < e.length; i++){ const d = e[i] - e[i-1]; if (d > 0) climb += d; else desc -= d; }
+  return { e, climb, desc, min:Math.min(...e), max:Math.max(...e) };
+}
+function elevHTML(x){
+  if (!x) return '';
+  const u = v => Math.round(imperial() ? v * 3.28084 : v).toLocaleString() + (imperial() ? ' ft' : ' m');
+  const W = 300, H = 56, span = Math.max(15, x.max - x.min), n = x.e.length;
+  const pts = x.e.map((v, i) => `${(i / (n - 1) * W).toFixed(1)},${(H - 4 - (v - x.min) / span * (H - 10)).toFixed(1)}`);
+  return `<h3 class="label">Elevation</h3>
+    <svg class="elev" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Elevation profile">
+      <path d="M0,${H} L${pts.join(' L')} L${W},${H} Z" class="elev-a"/><path d="M${pts.join(' L')}" class="elev-l"/></svg>
+    <p class="elev-t"><span>Climb <b>${u(x.climb)}</b></span><span>Descent <b>${u(x.desc)}</b></span><span>Highest <b>${u(x.max)}</b></span></p>`;
+}
+function fillTripDetails(R){
+  const box = $('#pvTrip'); if (!box || !R) return;
+  R._id = R._id || Math.random().toString(36).slice(2);
+  box.dataset.rid = R._id;
+  if (!R._wx) R._wx = routeWeather(R).catch(() => null);
+  if (!R._elev) R._elev = routeElevation(R).catch(() => null);
+  Promise.all([R._wx, R._elev]).then(([wx, el]) => {
+    const b = $('#pvTrip'); if (!b || b.dataset.rid !== R._id) return;
+    b.innerHTML = wxStripHTML(wx) + elevHTML(el);
+  });
+}
+
+/* ---------- fuel cost ---------- */
+function fuelCost(m){
+  const eco = +(imperial() ? settings.mpg : settings.l100), price = +(imperial() ? settings.priceGal : settings.priceL);
+  if (!eco || !price) return '';
+  const c = imperial() ? (m / 1609.344) / eco * price : (m / 1000) * eco / 100 * price;
+  return (settings.currency || '$') + c.toFixed(2);
+}
+function routeExtra(r){
+  const bits = [];
+  if (r.engine === 'tomtom') bits.push(`<span class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</span>`);
+  const fc = fuelCost(r.distance); if (fc) bits.push(`<span>~${fc} fuel</span>`);
+  return bits.length ? `<small class="rt-extra">${bits.join(' · ')}</small>` : '';
+}
+mSheet.addEventListener('change', e => {
+  const k = e.target.dataset?.num; if (!k) return;
+  const v = parseFloat(String(e.target.value).replace(',', '.'));
+  settings[k] = isFinite(v) && v > 0 ? v : 0; saveSettings();
+  if (S.dest && !S.nav && S.routes.length) renderPreview();
+  toast('Saved', 1000);
+});
+
+/* ---------- saved places ---------- */
+const favs = () => store.get('favs', []) || [];
+const isFav = p => favs().some(f => Math.abs(f.lat - p.lat) < 1e-5 && Math.abs(f.lng - p.lng) < 1e-5);
+function toggleFav(p){
+  let f = favs();
+  if (isFav(p)){ f = f.filter(x => !(Math.abs(x.lat - p.lat) < 1e-5 && Math.abs(x.lng - p.lng) < 1e-5)); toast('Removed from Saved'); }
+  else { f.unshift({ name:p.name, addr:p.addr, lat:p.lat, lng:p.lng }); toast('Saved'); }
+  store.set('favs', f.slice(0, 30));
+}
+
+/* ---------- speed cameras along the route (OpenStreetMap) ---------- */
+const CAM = { list:[], layer:L.layerGroup().addTo(map), told:new Set(), route:null };
+async function loadCameras(R){
+  CAM.list = []; CAM.layer.clearLayers(); CAM.told.clear();
+  if (!settings.camAlerts) return;
+  const pts = [];
+  for (let i = 0; i < R.coords.length && R.cum[i] < 250000; i++) if (!pts.length || dist(pts[pts.length - 1], R.coords[i]) > 400) pts.push(R.coords[i]);
+  pts.push(R.coords[R.coords.length - 1]);
+  const line = pts.map(p => p[0].toFixed(5)+','+p[1].toFixed(5)).join(',');
+  try{
+    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+      body:'data='+encodeURIComponent(`[out:json][timeout:25];(node[highway=speed_camera](around:70,${line});node[enforcement~"^(maxspeed|traffic_signals)$"](around:70,${line}););out tags 400;`) });
+    if (!r.ok || CAM.route !== R) return;
+    const j = await r.json();
+    for (const e of j.elements || []){
+      const sn = snap(R, [e.lat, e.lon], 0); if (sn.d > 70) continue;
+      const red = e.tags?.enforcement === 'traffic_signals';
+      CAM.list.push({ id:e.id, along:sn.along, red, max:parseMaxspeed(e.tags?.maxspeed) });
+      L.marker([e.lat, e.lon], { interactive:false, icon:L.divIcon({ className:'rep cam-pin', iconSize:[24,24], iconAnchor:[12,12],
+        html:`<div style="background:${red ? '#c8312b' : RT.camera.color}">${RT.camera.svg}</div>` }) }).addTo(CAM.layer);
+    }
+  }catch{}
+}
+function checkCameras(along){
+  if (!settings.camAlerts) return;
+  const warnAt = Math.max(300, S.speed * 15);
+  for (const c of CAM.list){
+    const ahead = c.along - along;
+    if (ahead <= 0 || ahead > warnAt || CAM.told.has(c.id)) continue;
+    CAM.told.add(c.id);
+    const lim = c.max ? (imperial() ? Math.round(c.max / 1.609344 / 5) * 5 + ' miles per hour' : Math.round(c.max) + ' kilometers per hour') : '';
+    say((c.red ? 'Red light camera ahead' : 'Speed camera ahead') + (lim ? ', limit ' + lim : ''));
+    toast((c.red ? 'Red light camera' : 'Speed camera') + ' in ' + fd(ahead), 4000);
+  }
+}
+
+/* ---------- trip history ---------- */
+function logTrip(n){
+  if (!n || !(n.driven > 300)) return;
+  const trips = store.get('trips', []) || [];
+  trips.unshift({ name:S.dest?.name || 'Trip', t0:n.t0, t1:Date.now(), dist:n.driven, arrived:!!n.arrived });
+  store.set('trips', trips.slice(0, 60));
+}
+function renderTrips(){
+  const trips = store.get('trips', []) || [], wk = Date.now() - 7 * 864e5;
+  const week = trips.filter(t => t.t0 > wk), wd = week.reduce((a, t) => a + t.dist, 0), wt = week.reduce((a, t) => a + (t.t1 - t.t0) / 1000, 0);
+  const day = t => new Date(t).toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
+  openModal(`<h3 class="label" style="margin-top:0">Last 7 days</h3>
+    <div class="stats"><div><b>${week.length}</b><span>Trips</span></div><div><b>${fd(wd)}</b><span>Driven</span></div><div><b>${fmtDur(wt)}</b><span>Drive time</span></div></div>
+    <h3 class="label">Trip history</h3>
+    ${trips.length ? `<ul class="list">${trips.slice(0, 30).map(t => `<li><div class="row"><span class="row-ico">${ico.clock}</span>
+      <span class="row-txt"><b>${esc(t.name)}</b><small>${day(t.t0)} · ${new Date(t.t0).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })} · ${fmtDur((t.t1 - t.t0) / 1000)}${t.arrived ? '' : ' · ended early'}</small></span>
+      <span class="row-d">${fd(t.dist)}</span></div></li>`).join('')}</ul>
+      <button class="link" data-trips="clear">Clear history</button>` : '<p class="hint">Trips you navigate show up here.</p>'}`);
+}
+mSheet.addEventListener('click', e => {
+  const b = e.target.closest('[data-trips]'); if (!b) return;
+  store.set('trips', []); renderTrips(); toast('Trip history cleared');
+});
+
+/* ---------- windshield HUD ---------- */
+function hudOpen(){
+  closeModal(); $('#hudv').hidden = false;
+  try{ document.documentElement.requestFullscreen?.().catch(() => {}); }catch{}
+  if (S.nav && S.pos) navTick(); updateSpeedo();
+}
+function hudClose(){ $('#hudv').hidden = true; try{ if (document.fullscreenElement) document.exitFullscreen(); }catch{} }
+$('#hudv').addEventListener('click', e => {
+  const b = e.target.closest('[data-h]'); if (!b) return;
+  if (b.dataset.h === 'mirror'){ settings.hudMirror = !settings.hudMirror; saveSettings(); $('#hudv .h-in').classList.toggle('mirror', settings.hudMirror); }
+  else hudClose();
+});
 
 /* ---------- boot ---------- */
 applyTheme(); renderIdle(); drawReports(); drawPark(); renderMute(); updateSpeedo(); startGPS(); refreshConditions(true);
