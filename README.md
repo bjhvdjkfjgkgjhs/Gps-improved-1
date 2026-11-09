@@ -323,6 +323,23 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 .park-badge{width:30px;height:30px;border-radius:8px;background:#2557c9;color:#fff;display:grid;place-items:center;font:800 16px var(--font);flex:none}
 .chev{font-size:24px;color:var(--muted);flex:none}
 
+/* Route bubbles */
+.rt-bub-wrap{background:none;border:0}
+.rt-bub{position:absolute;left:0;bottom:10px;transform:translateX(-14px);display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap;
+  padding:6px 11px 7px;border-radius:12px;background:var(--ink);color:var(--panel);box-shadow:0 3px 10px rgba(0,0,0,.3);cursor:pointer;line-height:1.1}
+.rt-bub::after{content:"";position:absolute;left:10px;bottom:-7px;border:7px solid transparent;border-bottom:0;border-top-color:var(--ink)}
+.rt-bub b{font:800 17px var(--font)}
+.rt-bub span{font:800 11px var(--font);letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.rt-bub.on{background:var(--route);color:#fff}
+.rt-bub.on::after{border-top-color:var(--route)}
+/* Stops */
+.stop-pin div{width:30px;height:30px;border-radius:50%;background:#7a3fd1;color:#fff;display:grid;place-items:center;font:800 14px var(--font);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cats.wrap{flex-wrap:wrap;overflow:visible}
+.cat.on{border-color:var(--route);background:color-mix(in srgb,var(--route) 10%,transparent)}
+.pv-actions.three{grid-template-columns:1.3fr 1fr 1fr}
+/* Compass in heading-up mode */
+.compass.hdg{box-shadow:var(--shadow),inset 0 0 0 2.5px var(--route)}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -393,6 +410,7 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 <div id="toast" hidden role="status"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -419,16 +437,22 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', base:'street',
   ovOffroad:true, ovHike:false, ovMtb:false, ovReports:true,
   srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
-  trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true }, store.get('settings', {}));
+  trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true,
+  orient:'heading', useCompass:false, speedAlert:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 const mq = matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches);
+const isDark = () => {
+  if (settings.theme === 'sun'){ const p = S.pos || [map.getCenter().lat, map.getCenter().lng]; return sunAlt(p[0], p[1]) < -2; }
+  return settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches);
+};
 
-const map = L.map('map', { zoomControl:false, attributionControl:true, zoomSnap:.25 }).setView([40.7128, -74.006], 13);
+const map = L.map('map', { zoomControl:false, attributionControl:true, zoomSnap:.25,
+  rotate:true, bearing:0, rotateControl:false, touchRotate:false, shiftKeyRotate:false }).setView([40.7128, -74.006], 13);
 const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 function applyTheme(){
-  if (settings.theme === 'auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = settings.theme;
+  const th = settings.theme === 'sun' ? ((sunDark = isDark()) ? 'dark' : 'light') : settings.theme;
+  if (th === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = th;
   setBase();
   map.getContainer().classList.toggle('night', isDark() && baseKey === 'street');
   applyOverlays();
@@ -480,7 +504,7 @@ function instr(step){
   if (mod === 'uturn' && t !== 'arrive') return 'Make a U-turn'+onto;
   switch (t){
     case 'depart': return 'Head '+CARD[Math.round((m.bearing_after||0)/45)%8]+on;
-    case 'arrive': return 'Arrive at your destination'+(mod.includes('left') ? ', on the left' : mod.includes('right') ? ', on the right' : '');
+    case 'arrive': return (step.waypoint ? 'Arrive at your stop' : 'Arrive at your destination')+(mod.includes('left') ? ', on the left' : mod.includes('right') ? ', on the right' : '');
     case 'turn': case 'end of road': return 'Turn '+(mod || 'ahead')+onto;
     case 'new name': case 'continue': return (!mod || mod === 'straight') ? 'Continue'+on : 'Keep '+mod.replace('slight ','')+onto;
     case 'merge': return 'Merge'+(mod ? ' '+mod.replace('slight ','') : '')+onto;
@@ -536,41 +560,64 @@ function drawCar(){
   carMarker.setLatLng(S.pos); accCircle.setLatLng(S.pos).setRadius(Math.min(S.acc || 10, 500));
   rotateCar();
 }
-/* ---------- heading animation: one rAF loop, frame-rate independent ---------- */
-// Sensor readings are applied as targets; each frame eases toward them with an exponential
-// time constant. Compass uses ~45 ms (feels instant, no jitter); GPS course uses ~300 ms.
-let carRot = 0, roseRot = 0, animRun = false, animLast = 0, txtLast = 0;
+/* ---------- map rotation, car arrow and compass: one rAF loop, frame-rate independent ---------- */
+// Heading-up: the map turns so your direction of travel points up (needs the leaflet-rotate plugin).
+// Each frame eases toward the newest target: map ~350 ms, compass-driven arrow ~45 ms, GPS arrow ~300 ms.
+const canRotate = typeof map.setBearing === 'function';
+let carRot = 0, animRun = false, animLast = 0, txtLast = 0;
+S.mapHdg = 0;
 const wrap = d => ((d % 360) + 540) % 360 - 180;            // shortest signed angle
 const compassDriving = () => CMP.on && CMP.raw != null && S.speed < CMP_SPEED;
+const bearingNow = () => canRotate ? (map.getBearing() || 0) : 0;
+const headingUp = () => canRotate && settings.orient === 'heading';
+function northUp(){ if (canRotate) map.setBearing(0); }
 function kickAnim(){ if (!animRun){ animRun = true; animLast = performance.now(); requestAnimationFrame(animFrame); } }
 function rotateCar(){
   const root = carMarker?.getElement();
   if (root) root.classList.toggle('compass-on', compassDriving());
   kickAnim();
 }
+function mapHeading(){
+  const n = S.nav;
+  if (n && n.routeBrg != null && !n.off) return n.routeBrg;       // follow the road ahead, not GPS jitter
+  if (compassDriving()) return S.heading;
+  if (S.speed > 1.5) return S.heading;
+  return S.mapHdg;                                                 // stopped: hold the last direction
+}
 function animFrame(t){
   const dt = Math.min(.1, Math.max(0, (t - animLast) / 1000)); animLast = t;
   let busy = false;
+  if (canRotate){
+    let tgt = null;
+    if (settings.orient !== 'heading') tgt = 0;
+    else if (S.follow && S.pos && (S.nav || !S.dest)){ S.mapHdg = mapHeading(); tgt = -S.mapHdg; }
+    if (tgt !== null){
+      const cur = bearingNow(), d = wrap(tgt - cur);
+      if (Math.abs(d) > .15){ map.setBearing(cur + (Math.abs(d) < .6 ? d : d * (1 - Math.exp(-dt / .35)))); busy = true; }
+    }
+  }
+  const b = bearingNow();
   const carEl = carMarker?.getElement()?.querySelector('.car-rot');
   if (carEl){
     const d = wrap(S.heading - carRot);
-    if (Math.abs(d) > .05){
-      carRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / (compassDriving() ? .045 : .3)));
-      busy = true;
-    }
-    carEl.style.transform = `rotate(${carRot.toFixed(2)}deg)`;
+    if (Math.abs(d) > .05){ carRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / (compassDriving() ? .045 : .3))); busy = true; }
+    carEl.style.transform = `rotate(${(carRot + b).toFixed(2)}deg)`;   // markers stay upright, so add the map's turn
   }
-  if (CMP.on && CMP.raw != null){
-    const d = wrap(-CMP.raw - roseRot);
-    if (Math.abs(d) > .05){ roseRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / .045)); busy = true; }
-    roseEl.style.transform = `rotate(${roseRot.toFixed(2)}deg)`;
-    if (t - txtLast > 120){ txtLast = t; const h = (CMP.raw + 360) % 360;
-      cmpTxt.textContent = CARD16[Math.round(h / 22.5) % 16] + ' ' + Math.round(h) % 360 + '°'; }
+  roseEl.style.transform = `rotate(${b.toFixed(2)}deg)`;            // the red needle always points at north on screen
+  if (t - txtLast > 150){
+    txtLast = t;
+    const h = ((headingUp() ? S.mapHdg : (CMP.raw ?? 0)) % 360 + 360) % 360;
+    cmpTxt.textContent = headingUp() ? CARD16[Math.round(h / 22.5) % 16] : CMP.on && CMP.raw != null ? CARD16[Math.round(h / 22.5) % 16]+' '+Math.round(h)+'°' : 'N up';
   }
-  if (busy || CMP.on) requestAnimationFrame(animFrame); else animRun = false;
+  if (busy || CMP.on || headingUp()) requestAnimationFrame(animFrame); else animRun = false;
+}
+function renderOrient(){
+  const b = $('#btnCompass');
+  b.classList.remove('off'); b.classList.toggle('hdg', headingUp());
+  b.setAttribute('aria-label', headingUp() ? 'Switch to north up' : 'Turn the map with your direction of travel');
 }
 
-/* ---------- live compass (device orientation) ---------- */
+/* ---------- phone compass (device orientation) ---------- */
 const CMP = { on:false, raw:null, got:false }, CMP_SPEED = 2.5; // below ~5.5 mph, trust the compass over GPS course
 const CARD16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
 const roseEl = $('#btnCompass .rose'), cmpTxt = $('#cmpTxt');
@@ -584,7 +631,6 @@ function onOrient(e){
   if (h == null) return;
   h = (h + scrAngle + 360) % 360;
   CMP.got = true;
-  // Continuous (unwrapped) target so the animation never takes the long way round.
   CMP.raw = CMP.raw == null ? h : CMP.raw + wrap(h - CMP.raw);
   if (S.speed < CMP_SPEED) S.heading = (CMP.raw % 360 + 360) % 360;
   kickAnim();
@@ -592,26 +638,29 @@ function onOrient(e){
 async function compassOn(){
   try{
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      if (await DeviceOrientationEvent.requestPermission() !== 'granted'){ toast('Compass access was denied. Allow Motion & Orientation for this site.'); return; }
+      if (await DeviceOrientationEvent.requestPermission() !== 'granted'){ toast('Compass access was denied. Allow Motion & Orientation for this site.'); return compassOff(); }
     }
-  }catch{ toast('Compass access needs a tap on the compass button.'); return; }
-  if (!('DeviceOrientationEvent' in window)){ toast('This device has no compass sensor.'); return; }
+  }catch{ toast('Compass access needs a tap on the switch.'); return compassOff(); }
+  if (!('DeviceOrientationEvent' in window)){ toast('This device has no compass sensor.'); return compassOff(); }
   CMP.on = true; CMP.got = false; CMP.raw = null;
   window.addEventListener('ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation', onOrient);
-  const b = $('#btnCompass'); b.classList.remove('off'); b.setAttribute('aria-label', 'Turn off live compass');
-  cmpTxt.textContent = '…';
-  store.set('compass', true);
+  settings.useCompass = true; saveSettings(); store.set('compass', true);
   kickAnim();
   setTimeout(() => { if (CMP.on && !CMP.got){ toast('No compass reading. This device may lack a magnetometer.'); compassOff(); } }, 3000);
 }
 function compassOff(){
   CMP.on = false; CMP.raw = null;
   window.removeEventListener('deviceorientationabsolute', onOrient); window.removeEventListener('deviceorientation', onOrient);
-  const b = $('#btnCompass'); b.classList.add('off'); b.setAttribute('aria-label', 'Turn on live compass');
-  roseRot = 0; roseEl.style.transform = ''; cmpTxt.textContent = 'Compass';
-  store.set('compass', false); rotateCar();
+  settings.useCompass = false; saveSettings(); store.set('compass', false); rotateCar();
+  if (!modal.hidden && mSheet.dataset.view === 'layers') renderLayers();
 }
-$('#btnCompass').onclick = () => CMP.on ? compassOff() : compassOn();
+$('#btnCompass').onclick = () => {
+  if (!canRotate){ toast('Map rotation didn’t load. Check your connection and reload.'); return; }
+  settings.orient = headingUp() ? 'north' : 'heading'; saveSettings();
+  if (headingUp() && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; followCam(); }
+  renderOrient(); kickAnim();
+  toast(headingUp() ? 'Map turns with you' : 'North up', 1500);
+};
 function onPosition(c){
   const ll = [c.latitude, c.longitude], prev = S.pos, now = Date.now();
   let spd = (typeof c.speed === 'number' && !isNaN(c.speed)) ? c.speed : null;
@@ -639,12 +688,21 @@ function startGPS(){
 function followCam(){
   if (!S.pos) return;
   const z = S.nav ? (S.speed > 24 ? 15 : S.speed > 12 ? 16 : 17) : Math.max(map.getZoom(), 15);
-  const off = S.nav ? map.getSize().y * .2 : 0;
-  const p = map.project(S.pos, z).subtract([0, off]);
-  map.setView(map.unproject(p, z), z, { animate:true, duration:.6 });
+  const off = S.nav ? map.getSize().y * .22 : 0;
+  let c = S.pos;
+  if (off){   // put the car low on screen: center the map ahead of it, along the way the map faces
+    const mpp = 156543.03392 * Math.cos(rad(S.pos[0])) / 2 ** z;
+    c = destPoint(S.pos, headingUp() ? S.mapHdg : 0, off * mpp);
+  }
+  map.setView(c, z, { animate:true, duration:.6 });
+}
+function destPoint(p, brg, m){
+  const d = m / R_E, b = rad(brg), la = rad(p[0]), lo = rad(p[1]);
+  const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
+  return [deg(la2), deg(lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2)))];
 }
 map.on('dragstart', () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; });
-$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; followCam(); };
+$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; followCam(); kickAnim(); };
 
 /* ---------- speed & limit ---------- */
 function updateSpeedo(){
@@ -657,6 +715,8 @@ function updateSpeedo(){
   $('#limitVal').textContent = lv;
   const over = v > lv + (imperial() ? 4 : 6);
   lim.classList.toggle('over', over); $('#speedo').classList.toggle('over', over);
+  if (over && !S.wasOver && S.speed > 4) chime();
+  S.wasOver = over;
 }
 let slLast = 0, slBusy = false;
 function parseMaxspeed(s){
@@ -741,6 +801,7 @@ function renderPreview(state){
     body = `<ul class="routes">${S.routes.map((r, i) => `<li><button class="route-opt${i === S.routeIdx ? ' on' : ''}" data-route="${i}">
       <b>${fmtDur(r.duration)}</b><span>${fd(r.distance)} · via ${esc(r.via)}</span>${i === 0 ? '<em>Fastest</em>' : '<em></em>'}
       ${r.engine === 'tomtom' ? `<small class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</small>` : ''}</button></li>`).join('')}</ul>
+    ${S.stop ? `<p class="hint">Stopping at <b>${esc(S.stop.name)}</b> on the way</p>` : ''}
     ${R0?.note ? `<p class="hint">${esc(R0.note)}</p>` : ''}
     ${wxRouteHTML(R0)}
     <div class="pv-wx" id="pvWx"></div>
@@ -750,7 +811,7 @@ function renderPreview(state){
     <div class="pv-head"><div class="row-txt"><b class="pv-name">${esc(p.name)}</b><small>${esc(shortAddr(p.addr) || p.addr || '')}</small></div>
       <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
     ${body}
-    <div class="pv-save"><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button><button class="link" data-act="opts">Route options</button></div>`);
+    <div class="pv-save"><button class="link" data-act="sethome">Set as Home</button><button class="link" data-act="setwork">Set as Work</button><button class="link" data-act="opts">Route options</button><button class="link" data-act="addstop">${S.stop ? 'Change stop' : 'Add a stop'}</button></div>`);
   const R0 = S.routes[S.routeIdx];
   if (R0 && !state){
     const want = p.lat+','+p.lng+','+Math.round(R0.duration / 900);
@@ -775,6 +836,7 @@ sheet.addEventListener('click', e => {
   else if (act === 'go') startNav(false);
   else if (act === 'sim') startNav(true);
   else if (act === 'opts') renderRouteOpts();
+  else if (act === 'addstop') renderAddStop();
   else if (act === 'park') askPark();
   else if (act === 'sethome' || act === 'setwork'){ store.set(act.slice(3), S.dest); toast((act === 'sethome' ? 'Home' : 'Work')+' saved'); }
 });
@@ -794,6 +856,7 @@ async function previewPlace(p){
   if (!p) return;
   if (S.nav) endNav(true);
   cancelPlace(); catLayer.clearLayers();
+  if (S.stop && !(S.dest && S.dest.lat === p.lat && S.dest.lng === p.lng)){ S.stop = null; drawStop(); }
   S.dest = { ...p, ll:[p.lat, p.lng] }; S.routes = []; S.routeIdx = 0; S.follow = false;
   q.value = p.name; $('#clearQ').hidden = false; q.blur();
   if (destMarker) destMarker.setLatLng(S.dest.ll); else destMarker = L.marker(S.dest.ll, { icon:destIcon, interactive:false }).addTo(map);
@@ -807,6 +870,7 @@ async function previewPlace(p){
   }catch(e){ map.setView(S.dest.ll, 15); renderPreview({ error:e.message }); }
 }
 function closePreview(){
+  S.stop = null; drawStop();
   S.dest = null; S.routes = []; routeLayer.clearLayers();
   if (destMarker){ map.removeLayer(destMarker); destMarker = null; }
   q.value = ''; $('#clearQ').hidden = true; renderIdle();
@@ -818,7 +882,7 @@ function prepRoute(r){
   const cum = new Float64Array(coords.length);
   for (let i = 1; i < coords.length; i++) cum[i] = cum[i-1] + dist(coords[i-1], coords[i]);
   const total = cum[coords.length-1];
-  const steps = r.legs.flatMap(l => l.steps);
+  const steps = r.legs.flatMap((l, li) => l.steps.map(st => (st.maneuver?.type === 'arrive' && li < r.legs.length - 1) ? Object.assign(st, { waypoint:true }) : st));
   const sum = steps.reduce((a, s) => a + s.distance, 0) || 1, scale = total / sum;
   const stepStart = []; let acc = 0;
   for (const s of steps){ stepStart.push(acc*scale); acc += s.distance; }
@@ -837,8 +901,10 @@ function drawRoutes(){
     if (!on) pl.on('click', () => { S.routeIdx = i; drawRoutes(); renderPreview(); });
     if (on) for (const t of trafficSegs(r)) L.polyline(t.ll, { color:t.color, weight:7, interactive:false }).addTo(routeLayer);
   }
+  drawBubbles();
 }
 function fitRoutes(){
+  northUp();
   const b = L.latLngBounds(S.routes.flatMap(r => r.coords));
   if (S.pos) b.extend(S.pos);
   map.fitBounds(b, { paddingTopLeft:[30, $('#top').offsetHeight + 30], paddingBottomRight:[30, sheet.offsetHeight + 30] });
@@ -952,6 +1018,8 @@ function navTick(){
   let remT = R.steps[k].duration * (stepLen > 0 ? Math.max(0, Math.min(1, (stepEnd - s.along)/stepLen)) : 0);
   for (let i = k+1; i < R.steps.length; i++) remT += R.steps[i].duration;
   n.remT = remT; n.remD = remD;
+  n.routeBrg = s.d < 35 ? bearing(s.pt, pointAt(R, s.along + 35).pt) : null;
+  if (S.stop){ const w = R.steps.findIndex(st => st.waypoint); if (w >= 0 && s.along > R.stepStart[w] + 40){ S.stop = null; drawStop(); toast('Stop reached'); } }
   renderNav(next, toNext, remD, remT);
   speakGuidance(next, toNext);
   for (const t of n.tSegs || []) if (!t.gone && t.b <= s.i){ t.gone = true; n.tLayer.removeLayer(t.layer); }
@@ -984,13 +1052,13 @@ function speakGuidance(k, toNext){
     sp.now = 1; sp.far = sp.near = 1;
     const nxt = R.steps[k+1];
     const then = nxt && (R.stepStart[k+1] - R.stepStart[k]) < 200 ? ', then '+instr(nxt).replace(/^./, c => c.toLowerCase()) : '';
-    say(step.maneuver.type === 'arrive' ? 'You have arrived' : text + then);
+    say(step.maneuver.type === 'arrive' ? (step.waypoint ? 'You have reached your stop' : 'You have arrived') : text + then);
   }
 }
-async function reroute(){
+async function reroute(force){
   const n = S.nav;
-  if (!n || n.rerouting || Date.now() - n.lastReroute < 8000) return;
-  n.rerouting = true; n.lastReroute = Date.now(); $('#bStreet').textContent = 'Rerouting…'; say('Rerouting');
+  if (!n || n.rerouting || (!force && Date.now() - n.lastReroute < 8000)) return;
+  n.rerouting = true; n.lastReroute = Date.now(); $('#bStreet').textContent = force ? 'Updating route…' : 'Rerouting…'; say(force ? 'Updating your route' : 'Rerouting');
   try{
     const [r] = await fetchRoutes(S.pos, S.dest.ll, false);
     if (!S.nav) return;
@@ -1009,6 +1077,7 @@ function arrive(){
 }
 function endNav(keepDest){
   stopSim(); keepAwake(false); clearInterval(fasterT);
+  S.stop = null; drawStop();
   if (S.nav?.tLayer) map.removeLayer(S.nav.tLayer);
   $('#bLanes').hidden = true; WX.ahead = []; renderWxAlert();
   if (navLine){ map.removeLayer(navLine); map.removeLayer(navCasing); navLine = navCasing = null; }
@@ -1135,13 +1204,16 @@ function renderLayers(){
     <h3 class="label">Settings</h3>
     <div class="set-row"><span>Units</span>${seg('units', [['imperial','Miles'],['metric','Kilometers']])}</div>
     <div class="set-row"><span>Voice guidance</span>${seg('voice', [['true','On'],['false','Off']])}</div>
-    <div class="set-row"><span>Appearance</span>${seg('theme', [['auto','Auto'],['light','Day'],['dark','Night']])}</div>
+    <div class="set-row"><span>Day and night</span>${seg('theme', [['auto','System'],['sun','Sunset'],['light','Day'],['dark','Night']])}</div>
+    <div class="set-row"><span>Map direction</span>${seg('orient', [['heading','Turns with you'],['north','North up']])}</div>
+    ${tg('useCompass', 'Phone compass', 'Point the arrow, and the map, the way your phone faces when you’re stopped')}
+    ${tg('speedAlert', 'Speeding chime', 'Play a tone when you go over the speed limit')}
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
     <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
   mSheet.dataset.view = 'layers';
   if (wasOpen) mSheet.scrollTop = keep;
 }
-const rerenderModal = () => mSheet.dataset.view === 'routeopts' ? renderRouteOpts() : renderLayers();
+const rerenderModal = () => mSheet.dataset.view === 'routeopts' ? renderRouteOpts() : mSheet.dataset.view === 'stops' ? null : renderLayers();
 $('#btnLayers').onclick = renderLayers;
 mSheet.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1149,6 +1221,7 @@ mSheet.addEventListener('click', e => {
   if ('ttsave' in b.dataset){ saveTrafficKey(); return; }
   if (b.dataset.base){ settings.base = b.dataset.base; saveSettings(); applyTheme(); renderLayers(); return; }
   if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); if (k.startsWith('src')) resetTrails();
+    if (k === 'useCompass'){ settings[k] ? compassOn() : compassOff(); }
     if (/^(avoid|trafficRouting)/.test(k)) S.routesStale = true;
     applyOverlays(); rerenderModal(); return; }
   if (b.dataset.tool === 'park'){ askPark(); return; }
@@ -1163,6 +1236,7 @@ mSheet.addEventListener('click', e => {
     const k = b.dataset.set; let v = b.dataset.val; if (v === 'true' || v === 'false') v = v === 'true';
     settings[k] = v; saveSettings();
     if (k === 'theme') applyTheme();
+    if (k === 'orient'){ renderOrient(); if (settings.orient === 'heading' && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; followCam(); } kickAnim(); }
     if (k === 'units'){ updateSpeedo(); updateAlt(); if (S.nav && S.pos) navTick(); else if (!S.nav) S.dest ? renderPreview() : renderIdle(); }
     if (k === 'voice' && !v) speechSynthesis?.cancel?.();
     if (k === 'voice') renderMute();
@@ -1210,8 +1284,8 @@ map.on('click', e => { if (PLACE){ PLACE.m.setLatLng(e.latlng); plSub(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (PLACE) cancelPlace(); else if (!modal.hidden) closeModal(); } });
 
 /* ---------- base maps & overlays ---------- */
-map.createPane('overTiles').style.zIndex = 250; map.getPane('overTiles').style.pointerEvents = 'none';
-map.createPane('trails').style.zIndex = 390;
+map.createPane('overTiles', map._rotatePane).style.zIndex = 250; map.getPane('overTiles').style.pointerEvents = 'none';
+map.createPane('trails', map._rotatePane).style.zIndex = 390;
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
 const BASES = {
   street:{ url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', o:{ maxZoom:19, attribution:TILE_ATTR } },
@@ -1538,7 +1612,7 @@ async function searchCat(k){
     if (S.list.length){
       S.follow = false; $('#btnRecenter').hidden = !S.pos;
       map.fitBounds(L.latLngBounds(S.list.slice(0, 10).map(p => [p.lat, p.lng]).concat([c])),
-        { paddingTopLeft:[30, $('#top').offsetHeight + 30], paddingBottomRight:[70, sheet.offsetHeight + 30], maxZoom:16 });
+        { paddingTopLeft:[30, $('#top').offsetHeight + 30], paddingBottomRight:[70, sheet.offsetHeight + 30], maxZoom:16 }); northUp();
     }
   }catch(e){ sheetHTML(`<div class="grab"></div><p class="err">${esc(e.message)}</p><button class="link" data-act="back">Back</button>`); }
 }
@@ -1603,7 +1677,8 @@ async function fetchRoutes(from, to, alts){
 }
 async function fetchOSRM(from, to, alts){
   const ex = [settings.avoidTolls && 'toll', settings.avoidHighways && 'motorway', settings.avoidFerries && 'ferry'].filter(Boolean);
-  const base = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true&alternatives=${alts ? 'true' : 'false'}`;
+  const pts = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to];
+  const base = `https://router.project-osrm.org/route/v1/driving/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true&alternatives=${alts && !S.stop ? 'true' : 'false'}`;
   const get = async url => {
     let r; try{ r = await fetch(url); }catch{ throw new Error('Could not reach the routing service. Check your connection.'); }
     const j = await r.json().catch(() => ({}));
@@ -1619,7 +1694,9 @@ async function fetchOSRM(from, to, alts){
 }
 async function fetchTomTom(from, to, alts){
   const av = [settings.avoidTolls && 'tollRoads', settings.avoidHighways && 'motorways', settings.avoidFerries && 'ferries', settings.avoidUnpaved && 'unpavedRoads'].filter(Boolean);
-  const u = `https://api.tomtom.com/routing/1/calculateRoute/${from[0].toFixed(6)},${from[1].toFixed(6)}:${to[0].toFixed(6)},${to[1].toFixed(6)}/json`
+  const locs = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to].map(p => p[0].toFixed(6)+','+p[1].toFixed(6)).join(':');
+  if (S.stop) alts = false;
+  const u = `https://api.tomtom.com/routing/1/calculateRoute/${locs}/json`
     + `?key=${encodeURIComponent(trafficKey())}&traffic=true&travelMode=car&routeType=fastest&instructionsType=coded&sectionType=traffic&computeTravelTimeFor=all`
     + (alts ? '&maxAlternatives=2' : '') + av.map(a => '&avoid='+a).join('');
   const r = await fetch(u);
@@ -1639,11 +1716,11 @@ async function fetchTomTom(from, to, alts){
 }
 function ttToOsrm(tt){
   const pts = tt.legs.flatMap(l => l.points).map(p => [p.longitude, p.latitude]);
-  const ins = (tt.guidance?.instructions || []).filter(i => !/^WAYPOINT/.test(i.maneuver || ''));
+  const ins = (tt.guidance?.instructions || []).filter(i => i.maneuver !== 'WAYPOINT_AHEAD');
   let steps = ins.map((i, n) => {
     const nx = ins[n + 1];
     return { distance: nx ? nx.routeOffsetInMeters - i.routeOffsetInMeters : 0, duration: nx ? nx.travelTimeInSeconds - i.travelTimeInSeconds : 0,
-      name: i.street || '', ref: (i.roadNumbers || [])[0] || '', exits: i.exitNumber || '', maneuver: ttManeuver(i, pts) };
+      name: i.street || '', ref: (i.roadNumbers || [])[0] || '', exits: i.exitNumber || '', maneuver: ttManeuver(i, pts), waypoint: /^WAYPOINT/.test(i.maneuver || '') };
   });
   if (steps.length < 2) steps = [
     { distance:tt.summary.lengthInMeters, duration:tt.summary.travelTimeInSeconds, name:'', maneuver:ttManeuver({ maneuver:'DEPART', pointIndex:0 }, pts) },
@@ -1654,7 +1731,7 @@ function ttManeuver(i, pts){
   const m = i.maneuver || '', ang = i.turnAngleInDecimalDegrees || 0;
   const side = /LEFT/.test(m) ? 'left' : /RIGHT/.test(m) ? 'right' : ang < -10 ? 'left' : ang > 10 ? 'right' : '';
   if (m === 'DEPART'){ const k = i.pointIndex || 0, a = pts[k], b = pts[Math.min(k + 1, pts.length - 1)]; return { type:'depart', bearing_after: bearing([a[1], a[0]], [b[1], b[0]]) }; }
-  if (/^ARRIVE/.test(m)) return { type:'arrive', modifier:side };
+  if (/^ARRIVE|^WAYPOINT/.test(m)) return { type:'arrive', modifier:side };
   if (m === 'STRAIGHT' || m === 'FOLLOW' || /^SWITCH_/.test(m) || m === 'TAKE_FERRY') return { type:'continue', modifier:'straight' };
   if (/^KEEP_/.test(m)) return { type:'fork', modifier:'slight '+side };
   if (/^BEAR_/.test(m)) return { type:'turn', modifier:'slight '+side };
@@ -1719,6 +1796,7 @@ $('#btnOverview').onclick = () => {
   const n = S.nav; if (!n) return;
   S.follow = false; $('#btnRecenter').hidden = false;
   const rest = n.route.coords.slice(Math.max(0, snap(n.route, S.pos || n.route.coords[0], n.along - 150).i));
+  northUp();
   map.fitBounds(L.latLngBounds(rest.concat(S.pos ? [S.pos] : [])), { paddingTopLeft:[40, $('#top').offsetHeight + 30], paddingBottomRight:[80, $('#navbar').offsetHeight + 40] });
 };
 function shareText(){
@@ -1742,7 +1820,8 @@ function renderTrip(){
   }).join('');
   openModal(`<div class="trip-head"><div><b>${n.remT != null ? clock(n.remT) : '--'}</b><span>arrival</span></div>
       <div><b>${n.remT != null ? fmtDur(n.remT) : '--'}</b><span>${n.remD != null ? fd(n.remD) : ''}</span></div>${delay}</div>
-    <div class="pv-actions"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="overview">Overview</button></div>
+    <div class="pv-actions three"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="stop">${S.stop ? 'Change stop' : 'Add stop'}</button><button class="btn" data-trip="overview">Overview</button></div>
+    ${S.stop ? `<p class="hint">Stop: <b>${esc(S.stop.name)}</b></p>` : ''}
     ${wxRouteHTML(R)}
     <h3 class="label">Turns ahead</h3><ol class="steps">${items}</ol>`);
 }
@@ -1750,6 +1829,7 @@ $('#tripBtn').onclick = renderTrip;
 mSheet.addEventListener('click', e => {
   const b = e.target.closest('[data-trip]'); if (!b) return;
   if (b.dataset.trip === 'share') shareETA();
+  if (b.dataset.trip === 'stop') renderAddStop();
   if (b.dataset.trip === 'overview'){ closeModal(); $('#btnOverview').click(); }
 });
 
@@ -1766,8 +1846,8 @@ function renderRouteOpts(){
 }
 
 /* ---------- weather: NEXRAD radar, NWS storm warnings, conditions ---------- */
-map.createPane('radar').style.zIndex = 240; map.getPane('radar').style.pointerEvents = 'none';
-map.createPane('warnings').style.zIndex = 395;
+map.createPane('radar', map._rotatePane).style.zIndex = 240; map.getPane('radar').style.pointerEvents = 'none';
+map.createPane('warnings', map._rotatePane).style.zIndex = 395;
 const RADAR = { layers:[], labels:[], timer:null, refresh:null, frame:0, sig:null, hold:0 };
 function applyRadar(){
   const sig = settings.ovRadar ? (settings.radarAnim ? 'anim' : 'still') : '';
@@ -1875,7 +1955,7 @@ function renderWxAlert(){
   if (!pick || !settings.ovWarnings){ el.hidden = true; return; }
   el.style.setProperty('--wc', pick.color);
   el.innerHTML = `<i></i><span><b>${esc(pick.p.event)}</b> ${a ? 'here' : 'on your route'} · until ${untilTxt(pick.p.expires || pick.p.ends)}</span>`;
-  el.onclick = () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; map.fitBounds(L.polygon(pick.polys).getBounds(), { padding:[40, 40] }); L.popup({ maxWidth:300 }).setLatLng(L.polygon(pick.polys).getBounds().getCenter()).setContent(warnPopup(pick)).openOn(map); };
+  el.onclick = () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; northUp(); map.fitBounds(L.polygon(pick.polys).getBounds(), { padding:[40, 40] }); L.popup({ maxWidth:300 }).setLatLng(L.polygon(pick.polys).getBounds().getCenter()).setContent(warnPopup(pick)).openOn(map); };
   el.hidden = false;
 }
 /* current conditions + forecast at arrival (Open-Meteo, keyless) */
@@ -1969,9 +2049,113 @@ if (SR){
   };
 }
 
+/* ---------- add a stop on the way ---------- */
+const STOP_CATS = { fuel:CATS.fuel, food:CATS.food,
+  cafe:{ label:'Coffee', color:'#7b4a2e', q:'nwr[amenity=cafe]', svg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h13v5a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6zm13 1h1.5a2.5 2.5 0 0 1 0 5H17v-2h1.5a.5.5 0 0 0 0-1H17zM7 3c0 1.5 1.5 1.5 1.5 3M11 3c0 1.5 1.5 1.5 1.5 3" stroke="currentColor" stroke-width="1.4" fill-rule="evenodd"/></svg>' },
+  ev:CATS.ev, parking:CATS.parking };
+let stopMarker = null;
+function drawStop(){
+  if (stopMarker){ map.removeLayer(stopMarker); stopMarker = null; }
+  if (S.stop) stopMarker = L.marker([S.stop.lat, S.stop.lng], { interactive:false, zIndexOffset:600,
+    icon:L.divIcon({ className:'stop-pin', iconSize:[30,30], iconAnchor:[15,15], html:'<div>1</div>' }) }).addTo(map);
+}
+function renderAddStop(){
+  openModal(`<h3 class="label" style="margin-top:0">Add a stop on the way</h3>
+    <div class="cats wrap">${Object.entries(STOP_CATS).map(([k, C]) => `<button class="cat" data-stopcat="${k}"><i style="background:${C.color}">${C.svg}</i>${C.label}</button>`).join('')}</div>
+    <div id="stopList"><p class="hint">Pick a category to find places close to your route.</p></div>
+    ${S.stop ? `<button class="link" data-stop="remove">Remove stop: ${esc(S.stop.name)}</button>` : ''}`);
+  mSheet.dataset.view = 'stops';
+}
+async function findStops(k){
+  const C = STOP_CATS[k], R = S.nav ? S.nav.route : S.routes[S.routeIdx]; if (!C || !R) return;
+  mSheet.querySelectorAll('[data-stopcat]').forEach(b => b.classList.toggle('on', b.dataset.stopcat === k));
+  const here = S.nav ? S.nav.along : 0, from = S.nav ? snap(R, S.pos || R.coords[0], here - 150).i : 0, pts = [];
+  for (let i = from; i < R.coords.length && R.cum[i] - R.cum[from] < 60000; i++)
+    if (!pts.length || dist(pts[pts.length - 1], R.coords[i]) > 1500) pts.push(R.coords[i]);
+  pts.push(R.coords[Math.min(R.coords.length - 1, from + 1)]);
+  const box = $('#stopList'); box.innerHTML = '<p class="hint">Searching along your route…</p>';
+  const ql = `[out:json][timeout:25];${C.q}(around:1200,${pts.map(p => p[0].toFixed(5)+','+p[1].toFixed(5)).join(',')});out center tags 80;`;
+  try{
+    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    S.stopList = (j.elements || []).map(e => {
+      const t = e.tags || {}, lat = e.lat ?? e.center?.lat, lng = e.lon ?? e.center?.lon;
+      if (lat == null) return null;
+      const sn = snap(R, [lat, lng], here);
+      return { name:t.name || t.brand || C.label, lat, lng, addr:[[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), t['addr:city']].filter(Boolean).join(', ') || C.label, off:sn.d, ahead:sn.along - here };
+    }).filter(p => p && p.ahead > 100).sort((a, b) => (a.ahead + a.off * 4) - (b.ahead + b.off * 4)).slice(0, 15);
+    if (!$('#stopList')) return;
+    $('#stopList').innerHTML = S.stopList.length
+      ? `<ul class="list">${S.stopList.map((p, i) => `<li><button class="row" data-stopi="${i}"><span class="row-ico" style="color:${C.color}">${C.svg}</span>
+          <span class="row-txt"><b>${esc(p.name)}</b><small>${fd(p.off)} off route · ${fd(p.ahead)} ahead</small></span></button></li>`).join('')}</ul>`
+      : '<p class="hint">Nothing close to your route in the next 37 miles.</p>';
+  }catch{ if ($('#stopList')) $('#stopList').innerHTML = '<p class="err">Couldn’t search along the route. Try again in a moment.</p>'; }
+}
+async function rerouteWithStop(){
+  if (S.nav) await reroute(true);
+  else if (S.dest) previewPlace(S.dest);
+}
+mSheet.addEventListener('click', e => {
+  const b = e.target.closest('[data-stopcat],[data-stopi],[data-stop]'); if (!b) return;
+  if (b.dataset.stopcat) return findStops(b.dataset.stopcat);
+  if (b.dataset.stopi){ const p = S.stopList[+b.dataset.stopi]; if (!p) return; S.stop = p; drawStop(); closeModal(); toast('Stop added: '+p.name); rerouteWithStop(); return; }
+  if (b.dataset.stop === 'remove'){ S.stop = null; drawStop(); closeModal(); toast('Stop removed'); rerouteWithStop(); }
+});
+
+/* ---------- speeding chime (WebAudio, unlocked on first tap) ---------- */
+let audioCtx = null;
+function unlockAudio(){ try{ audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }catch{} }
+document.addEventListener('pointerdown', unlockAudio, { capture:true });
+function chime(){
+  if (!audioCtx || !settings.speedAlert) return;
+  const t = audioCtx.currentTime;
+  [0, .17].forEach((o, i) => {
+    const os = audioCtx.createOscillator(), g = audioCtx.createGain();
+    os.type = 'sine'; os.frequency.value = i ? 1320 : 990;
+    g.gain.setValueAtTime(.0001, t + o); g.gain.exponentialRampToValueAtTime(.22, t + o + .02); g.gain.exponentialRampToValueAtTime(.0001, t + o + .15);
+    os.connect(g).connect(audioCtx.destination); os.start(t + o); os.stop(t + o + .17);
+  });
+}
+
+/* ---------- sunset-based day/night ---------- */
+function sunAlt(lat, lng, when = Date.now()){
+  const d = when / 86400000 - 10957.5;                               // days since J2000.0
+  const g = rad((357.529 + 0.98560028 * d) % 360), q = (280.459 + 0.98564736 * d) % 360;
+  const Lm = rad(q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)), e = rad(23.439 - 0.00000036 * d);
+  const dec = Math.asin(Math.sin(e) * Math.sin(Lm)), ra = Math.atan2(Math.cos(e) * Math.sin(Lm), Math.cos(Lm));
+  const ha = rad(((18.697374558 + 24.06570982441908 * d) % 24) * 15 + lng) - ra;
+  return deg(Math.asin(Math.sin(rad(lat)) * Math.sin(dec) + Math.cos(rad(lat)) * Math.cos(dec) * Math.cos(ha)));
+}
+let sunDark = null;
+setInterval(() => { if (settings.theme === 'sun' && isDark() !== sunDark) applyTheme(); }, 60000);
+
+/* ---------- route time bubbles in the preview ---------- */
+function bubblePoint(r, others){
+  const n = r.coords.length;
+  if (!others.length) return r.coords[Math.floor(n * .5)];
+  const step = Math.max(1, Math.floor(n / 60));
+  let best = r.coords[Math.floor(n / 2)], bestD = -1;
+  for (let i = Math.floor(n * .2); i < Math.floor(n * .8); i += step){
+    let md = Infinity;
+    for (const o of others){ const os = Math.max(1, Math.floor(o.coords.length / 80)); for (let j = 0; j < o.coords.length; j += os){ const dd = dist(r.coords[i], o.coords[j]); if (dd < md) md = dd; } }
+    if (md > bestD){ bestD = md; best = r.coords[i]; }
+  }
+  return best;
+}
+function drawBubbles(){
+  S.routes.forEach((r, i) => {
+    const on = i === S.routeIdx;
+    L.marker(bubblePoint(r, S.routes.filter(o => o !== r)), { zIndexOffset: on ? 900 : 800, keyboard:false,
+      icon:L.divIcon({ className:'rt-bub-wrap', iconSize:[0,0], html:`<div class="rt-bub${on ? ' on' : ''}"><b>${fmtDur(r.duration)}</b>${i === 0 ? '<span>Best</span>' : ''}</div>` }) })
+      .on('click', () => { S.routeIdx = i; drawRoutes(); renderPreview(); }).addTo(routeLayer);
+  });
+}
+
 /* ---------- boot ---------- */
 applyTheme(); renderIdle(); drawReports(); drawPark(); renderMute(); updateSpeedo(); startGPS(); refreshConditions(true);
 // Android grants orientation without a prompt, so restore the compass; iOS needs a tap each visit.
+renderOrient(); kickAnim();
 if (store.get('compass', false) && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') compassOn();
 </script>
 </body>
