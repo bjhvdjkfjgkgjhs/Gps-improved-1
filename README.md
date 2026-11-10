@@ -1822,7 +1822,7 @@ async function fetchRoutes(from, to, alts){
 async function fetchOSRM(from, to, alts){
   const ex = [settings.avoidTolls && 'toll', settings.avoidHighways && 'motorway', settings.avoidFerries && 'ferry'].filter(Boolean);
   const pts = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to];
-  const base = `https://router.project-osrm.org/route/v1/driving/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true&annotations=maxspeed&alternatives=${alts && !S.stop ? 'true' : 'false'}`;
+  const base = `https://router.project-osrm.org/route/v1/driving/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true&alternatives=${alts && !S.stop ? 'true' : 'false'}`;
   const get = async url => {
     let r; try{ r = await fetch(url); }catch{ throw new Error('Could not reach the routing service. Check your connection.'); }
     const j = await r.json().catch(() => ({}));
@@ -1830,6 +1830,7 @@ async function fetchOSRM(from, to, alts){
   };
   let res = await get(base + (ex.length ? '&exclude='+ex.join(',') : '')), note = '';
   if (!res.ok && ex.length){ res = await get(base); note = 'The free router can’t apply your avoid settings to this trip.'; }
+  if (!res.ok && res.j.code === 'InvalidQuery' && /alternatives=true/.test(base)) res = await get(base.replace('alternatives=true', 'alternatives=false'));
   if (!res.ok){
     if (res.j.code === 'NoRoute' || res.j.code === 'Ok') throw new Error('No drivable route to this place.');
     throw new Error('Routing service returned '+(res.j.code || res.status)+'. Try again in a moment.');
@@ -2555,4 +2556,3 @@ if (store.get('compass', false) && typeof DeviceOrientationEvent !== 'undefined'
 </script>
 </body>
 </html>
- 
