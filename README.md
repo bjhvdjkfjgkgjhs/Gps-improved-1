@@ -13,25 +13,34 @@
 :root{
   --bg:#e9eeeb; --panel:#ffffff; --panel-2:#f1f5f3; --ink:#13201b; --muted:#5b6a63; --line:#d3dcd8;
   --guide:#006b54; --guide-ink:#ffffff; --warn:#ffc20e; --warn-ink:#1a1a1a; --danger:#c8312b;
-  --route:#1a6fe0; --route-alt:#8fa7c6; --casing:#ffffff;
+  --route:#1a6fe0; --route-alt:#8fa7c6; --casing:#ffffff; --sky:#d7e4ec;
   --font:'Overpass',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'Overpass Mono',ui-monospace,'SF Mono',Menlo,monospace;
   --bottom:180px; --shadow:0 6px 22px rgba(10,25,20,.22);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0d1311; --panel:#18211e; --panel-2:#212c28; --ink:#e6eeea; --muted:#93a39c; --line:#2b3733;
-  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
+  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
 }}
 :root[data-theme="dark"]{
   --bg:#0d1311; --panel:#18211e; --panel-2:#212c28; --ink:#e6eeea; --muted:#93a39c; --line:#2b3733;
-  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
+  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible{outline:3px solid var(--route);outline-offset:2px}
-#map{position:fixed;inset:0;z-index:0;background:var(--bg)}
+#mapWrap{position:fixed;inset:0;z-index:0;overflow:hidden;perspective:1000px;perspective-origin:50% 20%;background:var(--sky)}
+#map{position:absolute;inset:0;background:var(--bg);transform-origin:50% 100%;transition:transform .6s ease}
+body.three-d #map{left:-45%;right:-45%;top:-85%;bottom:0;transform:rotateX(46deg)}
+#horizon{position:fixed;left:0;right:0;top:0;height:30%;z-index:1;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:linear-gradient(var(--sky) 30%, color-mix(in srgb,var(--sky) 60%,transparent) 62%, transparent)}
+body.three-d #horizon{opacity:1}
+body.three-d .car-rot{width:56px;height:56px;margin:-6px}
+body.three-d .leaflet-control-attribution{visibility:hidden}
+#attr3d{position:fixed;z-index:540;right:max(8px,env(safe-area-inset-right,0px));bottom:calc(var(--bottom) + 2px);font-size:10px;color:var(--muted);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:1px 6px;border-radius:4px}
+#attr3d a{color:var(--muted)}
 #map.night .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.88) saturate(.7)}
 .leaflet-bottom{bottom:var(--bottom)!important;transition:bottom .2s}
 .leaflet-control-attribution{font-size:10px;background:color-mix(in srgb,var(--panel) 80%,transparent)!important;color:var(--muted)}
@@ -382,6 +391,15 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 #hudv .h-bar{display:flex;gap:10px;justify-content:center}
 #hudv .h-bar button{height:44px;padding:0 18px;border-radius:12px;background:#151a18;color:#cfe;font-weight:700;border:1px solid #2a3330}
 
+/* Estimated limit, parking chip, faster alt */
+.limit.est{opacity:.82}
+.limit.est::after{content:"EST";position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);font:800 8.5px var(--font);letter-spacing:.1em;color:var(--muted);background:var(--panel);padding:0 4px;border-radius:4px}
+.limit{position:relative}
+.b-park{display:inline-flex;align-items:center;gap:8px;margin-top:10px;margin-left:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(255,255,255,.95);color:#13201b;font:800 13px var(--font)}
+.b-park span{width:24px;height:24px;border-radius:50%;background:#2557c9;color:#fff;display:grid;place-items:center;font-size:13px}
+.route-opt em.faster{color:var(--guide)}
+div.route-opt{cursor:default}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -389,7 +407,9 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 </style>
 </head>
 <body>
-<div id="map"></div>
+<div id="mapWrap"><div id="map"></div></div>
+<div id="horizon"></div>
+<div id="attr3d" hidden></div>
 
 <header id="top">
   <div id="searchbar">
@@ -405,6 +425,7 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
     </div>
     <div id="bLanes" class="b-lanes" hidden></div>
     <div id="bThen" class="b-then" hidden></div>
+    <button id="bPark" class="b-park" hidden><span>P</span>Parking near destination</button>
   </div>
   <button id="wxAlert" hidden></button>
   <div id="tkey" hidden></div>
@@ -442,7 +463,8 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
     <div class="nb-spacer"></div>
     <button id="btnSim" class="pill" hidden aria-label="Simulation speed">×1</button>
     <button id="btnMute" class="nb-ico" aria-label="Mute voice"></button>
-    <button id="btnOverview" class="nb-ico" aria-label="Route overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
+    <button id="btnAlts" class="nb-ico" aria-label="Other routes from here"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7l-6-6V4M12 14l6-6V4"/><path d="M3.5 6.5L6 4l2.5 2.5M15.5 6.5L18 4l2.5 2.5"/></svg></button>
+    <button id="btnOverview" class="nb-ico" hidden aria-label="Route overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
     <button id="btnEnd">End</button>
   </div>
 </section>
@@ -489,7 +511,7 @@ const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', bas
   srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
   trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true,
   orient:'heading', useCompass:false, speedAlert:true,
-  camAlerts:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
+  camAlerts:true, view3d:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 const mq = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => {
@@ -739,8 +761,8 @@ function startGPS(){
 }
 function followCam(){
   if (!S.pos) return;
-  const z = S.nav ? (S.speed > 24 ? 15 : S.speed > 12 ? 16 : 17) : Math.max(map.getZoom(), 15);
-  const off = S.nav ? map.getSize().y * .22 : 0;
+  const z = S.nav ? (S.speed > 24 ? 15 : S.speed > 12 ? 16 : 17) + (is3D ? .5 : 0) : Math.max(map.getZoom(), 15);
+  const off = carOffsetPx();
   let c = S.pos;
   if (off){   // put the car low on screen: center the map ahead of it, along the way the map faces
     const mpp = 156543.03392 * Math.cos(rad(S.pos[0])) / 2 ** z;
@@ -753,8 +775,8 @@ function destPoint(p, brg, m){
   const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
   return [deg(la2), deg(lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2)))];
 }
-map.on('dragstart', () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; });
-$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; followCam(); kickAnim(); };
+map.on('dragstart', () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; apply3D(); });
+$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; apply3D(); followCam(); kickAnim(); };
 
 /* ---------- speed & limit ---------- */
 function updateSpeedo(){
@@ -763,33 +785,84 @@ function updateSpeedo(){
   const lim = $('#limit');
   if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
   const lv = imperial() ? Math.round(S.limitKmh/1.609344/5)*5 : Math.round(S.limitKmh);
-  lim.hidden = false; lim.classList.toggle('metric', !imperial());
+  lim.hidden = false; lim.classList.toggle('metric', !imperial()); lim.classList.toggle('est', !!S.limitEst);
+  lim.title = S.limitEst ? 'Estimated from the road type. No posted limit is mapped here.' : 'Posted speed limit';
   $('#limitVal').textContent = lv;
   const over = v > lv + (imperial() ? 4 : 6);
-  lim.classList.toggle('over', over); $('#speedo').classList.toggle('over', over);
-  if (over && !S.wasOver && S.speed > 4) chime();
+  lim.classList.toggle('over', over && !S.limitEst); $('#speedo').classList.toggle('over', over);
+  if (over && !S.wasOver && S.speed > 4 && !S.limitEst) chime();
   if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; $('#hudv').classList.toggle('over', over); }
   S.wasOver = over;
 }
-let slLast = 0, slBusy = false;
+/* Speed limits on every road:
+   1) the route's own limits (TomTom speed-limit sections, or OSRM maxspeed annotations from OSM),
+   2) otherwise the nearest road from OpenStreetMap: its posted maxspeed tag,
+   3) otherwise a typical limit for that road type (shown as an estimate). */
+let slLast = 0, slBusy = false, slPos = null;
+const SL_ZONES = { urban:50, rural:90, motorway:120, trunk:100, living_street:20, walk:7, school:30, zone30:30 };
 function parseMaxspeed(s){
-  if (!s) return null; const m = String(s).match(/(\d+(?:\.\d+)?)\s*(mph)?/i);
-  if (!m) return null; const n = parseFloat(m[1]); return m[2] ? n*1.609344 : n;
+  if (!s) return null;
+  s = String(s).split(';')[0].trim();
+  if (/^none$/i.test(s) || /^signals$/i.test(s)) return null;
+  if (/^walk$/i.test(s)) return 7;
+  const m = s.match(/(\d+(?:\.\d+)?)\s*(mph|knots)?/i);
+  if (m){ const n = parseFloat(m[1]); return m[2] && /mph/i.test(m[2]) ? n*1.609344 : n; }
+  const z = s.split(':')[1]; return z && SL_ZONES[z.toLowerCase()] || null;
 }
+const inUS = ([la, lo]) => (la > 24.4 && la < 49.4 && lo > -124.9 && lo < -66.8) || (la > 51 && la < 71.5 && lo > -170 && lo < -129.9) || (la > 18.8 && la < 22.4 && lo > -160.4 && lo < -154.7);
+const US_MPH = { motorway:65, trunk:55, primary:45, secondary:45, tertiary:35, unclassified:35, road:35, residential:25, living_street:15, service:15,
+  motorway_link:45, trunk_link:35, primary_link:35, secondary_link:35, tertiary_link:25 };
+const INTL_KMH = { motorway:120, trunk:100, primary:80, secondary:80, tertiary:60, unclassified:60, road:60, residential:50, living_street:20, service:30,
+  motorway_link:80, trunk_link:60, primary_link:60, secondary_link:50, tertiary_link:50 };
+function defaultLimit(t, ll){
+  const h = t.highway || '';
+  if (inUS(ll)) return US_MPH[h] ? US_MPH[h] * 1.609344 : null;
+  return INTL_KMH[h] || null;
+}
+function segDist(p, a, b){
+  const cos = Math.cos(rad(p[0])), ax = (a[1]-p[1])*cos, ay = a[0]-p[0], bx = (b[1]-p[1])*cos, by = b[0]-p[0];
+  const dx = bx-ax, dy = by-ay, l2 = dx*dx + dy*dy; let t = l2 ? -(ax*dx + ay*dy)/l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  return Math.hypot(ax + t*dx, ay + t*dy) * 111320;
+}
+function setLimit(kmh, est){
+  if (kmh !== S.limitKmh || est !== S.limitEst){ S.limitKmh = kmh; S.limitEst = est; updateSpeedo(); }
+}
+const ROAD_RE = '^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$';
 async function maybeSpeedLimit(){
-  if (!S.pos || slBusy || Date.now() - slLast < 15000) return;
-  if (S.speed < 2 && S.limitKmh != null) return;
+  if (!S.pos) return;
+  const n = S.nav;
+  if (n && n.route.limits && n.si != null && !n.off){
+    const v = n.route.limits[Math.min(n.si, n.route.limits.length - 1)];
+    if (v != null){ setLimit(v, false); return; }
+  }
+  const moved = !slPos || dist(slPos, S.pos) > 120;
+  if (slBusy || Date.now() - slLast < (moved ? 6000 : 30000)) return;
+  if (!moved && S.limitKmh != null) return;
   slBusy = true; slLast = Date.now();
-  const q = `[out:json][timeout:10];way(around:20,${S.pos[0].toFixed(6)},${S.pos[1].toFixed(6)})[highway][maxspeed];out tags 4;`;
+  const at = S.pos, hdg = S.heading, moving = S.speed > 2;
+  const ql = `[out:json][timeout:10];way(around:30,${at[0].toFixed(6)},${at[1].toFixed(6)})[highway~"${ROAD_RE}"];out geom 12;`;
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(q),
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
-    const j = await r.json(); const ways = j.elements || [];
+    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    const j = await r.json();
     let cur = null;
-    if (S.nav){ const st = S.nav.route.steps[S.nav.k || 0]; cur = st && (st.name || st.ref); }
-    const w = ways.find(w => cur && (w.tags.name === cur || w.tags.ref === cur)) || ways[0];
-    S.limitKmh = w ? parseMaxspeed(w.tags.maxspeed) : null;
-    updateSpeedo();
+    if (n){ const st = n.route.steps[n.k || 0]; cur = st && (st.name || st.ref); }
+    let best = null, bestScore = Infinity;
+    for (const w of j.elements || []){
+      const g = (w.geometry || []).map(p => [p.lat, p.lon]); if (g.length < 2) continue;
+      for (let i = 0; i < g.length - 1; i++){
+        let sc = segDist(at, g[i], g[i+1]);
+        if (moving){ const b = bearing(g[i], g[i+1]); sc += Math.min(Math.abs(wrap(b - hdg)), Math.abs(wrap(b + 180 - hdg))) * .4; }
+        if (cur && (w.tags.name === cur || w.tags.ref === cur)) sc -= 12;
+        if (w.tags.highway === 'service' && !w.tags.name) sc += 15;      // parking aisles, driveways
+        if (sc < bestScore){ bestScore = sc; best = w; }
+      }
+    }
+    if (best){
+      const t = best.tags;
+      let kmh = parseMaxspeed(t.maxspeed || t['maxspeed:forward'] || t['maxspeed:backward']), est = false;
+      if (kmh == null && !/^none$/i.test(t.maxspeed || '')){ kmh = defaultLimit(t, at); est = true; }
+      slPos = at; setLimit(kmh, est);
+    }
   }catch{}
   slBusy = false;
 }
@@ -936,7 +1009,9 @@ function prepRoute(r){
   const byName = {};
   steps.forEach(s => { const n = s.name || s.ref; if (n) byName[n] = (byName[n] || 0) + s.distance; });
   const via = Object.entries(byName).sort((a, b) => b[1] - a[1])[0]?.[0] || 'local roads';
-  return { coords, cum, total, steps, stepStart, duration:r.duration, distance:r.distance, via };
+  const ann = (r.legs || []).flatMap(l => l.annotation?.maxspeed || []);
+  const limits = ann.length ? ann.map(a => a && a.speed ? (a.unit === 'mph' ? a.speed * 1.609344 : a.speed) : null) : null;
+  return { coords, cum, total, steps, stepStart, duration:r.duration, distance:r.distance, via, limits };
 }
 function drawRoutes(){
   routeLayer.clearLayers();
@@ -1011,7 +1086,7 @@ function startNav(simulate){
   const route = S.routes[S.routeIdx]; if (!route) return;
   cancelPlace(); addRecent(S.dest);
   S.nav = { route, spoken:{}, off:0, lastReroute:0, along:0, k:0, rerouting:false, remT:route.duration, remD:route.total, t0:Date.now(), driven:0, lastPos:S.pos };
-  renderMute(); WX.told.forEach(id => { if (String(id).startsWith('ahead:')) WX.told.delete(id); });
+  renderMute(); setTimeout(apply3D, 0); WX.told.forEach(id => { if (String(id).startsWith('ahead:')) WX.told.delete(id); });
   routeLayer.clearLayers(); drawNavRoute();
   $('#searchbar').hidden = true; $('#banner').hidden = false;
   sheet.hidden = true; $('#navbar').hidden = false; renderLegend();
@@ -1065,7 +1140,8 @@ function navTick(){
   const stepEnd = k+1 <= last ? R.stepStart[k+1] : R.total, stepLen = stepEnd - R.stepStart[k];
   let remT = R.steps[k].duration * (stepLen > 0 ? Math.max(0, Math.min(1, (stepEnd - s.along)/stepLen)) : 0);
   for (let i = k+1; i < R.steps.length; i++) remT += R.steps[i].duration;
-  n.remT = remT; n.remD = remD;
+  n.remT = remT; n.remD = remD; n.si = s.i;
+  $('#bPark').hidden = !(remD < 1300 && S.dest && !S.dest.isParking);
   if (n.lastPos){ const dd = dist(n.lastPos, S.pos); if (dd < 300) n.driven += dd; } n.lastPos = S.pos;
   checkCameras(s.along);
   n.routeBrg = s.d < 35 ? bearing(s.pt, pointAt(R, s.along + 35).pt) : null;
@@ -1122,20 +1198,21 @@ function arrive(){
   const name = S.dest?.name || 'your destination';
   if (!S.nav.spoken.arrived) say('You have arrived at '+name);
   S.nav.arrived = true;
+  if (S.dest?.isParking){ store.set('parked', { lat:S.pos?.[0] ?? S.dest.lat, lng:S.pos?.[1] ?? S.dest.lng, t:Date.now() }); drawPark(); toast('Parking spot saved'); }
   endNav(true);
   sheetHTML(`<div class="grab"></div><div class="pv-head"><div class="row-txt"><b class="pv-name">You’ve arrived</b><small>${esc(name)}</small></div>
     <button class="icon-btn" data-act="close" aria-label="Close">×</button></div>
     <div class="pv-actions"><button class="btn primary" data-act="park">Save parking spot</button><button class="btn" data-act="close">Done</button></div>`);
 }
 function endNav(keepDest){
-  logTrip(S.nav); hudClose();
+  logTrip(S.nav); hudClose(); altLayer.clearLayers(); $('#bPark').hidden = true;
   CAM.list = []; CAM.layer.clearLayers(); CAM.route = null;
   stopSim(); keepAwake(false); clearInterval(fasterT);
   S.stop = null; drawStop();
   if (S.nav?.tLayer) map.removeLayer(S.nav.tLayer);
   $('#bLanes').hidden = true; WX.ahead = []; renderWxAlert();
   if (navLine){ map.removeLayer(navLine); map.removeLayer(navCasing); navLine = navCasing = null; }
-  S.nav = null; renderLegend();
+  S.nav = null; renderLegend(); apply3D();
   $('#banner').hidden = true; $('#searchbar').hidden = false; $('#navbar').hidden = true; sheet.hidden = false;
   if (!keepDest) closePreview();
   else { S.routes = []; routeLayer.clearLayers(); if (destMarker){ map.removeLayer(destMarker); destMarker = null; } S.dest = null; q.value=''; $('#clearQ').hidden = true; renderIdle(); }
@@ -1218,6 +1295,7 @@ function checkReports(){
 const modal = $('#modal'), mSheet = $('#modalSheet');
 function openModal(html){ mSheet.innerHTML = '<div class="grab"></div>'+html; mSheet.dataset.view = ''; modal.hidden = false; }
 function closeModal(){
+  if (mSheet.dataset.view === 'alts') altLayer.clearLayers();
   modal.hidden = true; mSheet.dataset.view = '';
   if (S.routesStale){ S.routesStale = false; if (S.dest && !S.nav) previewPlace(S.dest); }
 }
@@ -1270,6 +1348,7 @@ function renderLayers(){
     <div class="set-row"><span>Map direction</span>${seg('orient', [['heading','Turns with you'],['north','North up']])}</div>
     ${tg('useCompass', 'Phone compass', 'Point the arrow, and the map, the way your phone faces when you’re stopped')}
     ${tg('speedAlert', 'Speeding chime', 'Play a tone when you go over the speed limit')}
+    ${tg('view3d', '3D driving view', 'Tilt the map toward the horizon while you navigate')}
     ${tg('camAlerts', 'Speed camera alerts', 'Warn before speed and red light cameras mapped on OpenStreetMap')}
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
     <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
@@ -1285,6 +1364,7 @@ mSheet.addEventListener('click', e => {
   if (b.dataset.base){ settings.base = b.dataset.base; saveSettings(); applyTheme(); renderLayers(); return; }
   if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); if (k.startsWith('src')) resetTrails();
     if (k === 'useCompass'){ settings[k] ? compassOn() : compassOff(); }
+    if (k === 'view3d') apply3D();
     if (/^(avoid|trafficRouting)/.test(k)) S.routesStale = true;
     applyOverlays(); rerenderModal(); return; }
   if (b.dataset.tool === 'park'){ askPark(); return; }
@@ -1323,7 +1403,7 @@ function startPlace(o){
       <div class="row-txt"><b class="pl-title">${esc(o.title)}</b><span class="pl-sub" id="plSub"></span></div></div>
     <p class="pl-tip">Drag the marker or tap the map to move it.</p>
     <div class="pl-actions"><button class="btn" data-pl="cancel">Cancel</button><button class="btn primary" data-pl="ok">${esc(o.okLabel)}</button></div>`;
-  $('#place').hidden = false; document.body.classList.add('placing');
+  $('#place').hidden = false; document.body.classList.add('placing'); apply3D();
   m.on('drag dragend', plSub); plSub();
   const sz = map.getSize(), pt = map.latLngToContainerPoint(o.ll);
   if (pt.x < 40 || pt.x > sz.x - 40 || pt.y < 140 || pt.y > sz.y - 260) map.panTo(o.ll);
@@ -1336,7 +1416,7 @@ function plSub(){
 function cancelPlace(){
   if (!PLACE) return;
   map.removeLayer(PLACE.m); PLACE = null;
-  $('#place').hidden = true; document.body.classList.remove('placing');
+  $('#place').hidden = true; document.body.classList.remove('placing'); apply3D();
 }
 $('#place').addEventListener('click', e => {
   const b = e.target.closest('[data-pl]'); if (!b || !PLACE) return;
@@ -1742,7 +1822,7 @@ async function fetchRoutes(from, to, alts){
 async function fetchOSRM(from, to, alts){
   const ex = [settings.avoidTolls && 'toll', settings.avoidHighways && 'motorway', settings.avoidFerries && 'ferry'].filter(Boolean);
   const pts = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to];
-  const base = `https://router.project-osrm.org/route/v1/driving/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true&alternatives=${alts && !S.stop ? 'true' : 'false'}`;
+  const base = `https://router.project-osrm.org/route/v1/driving/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true&annotations=maxspeed&alternatives=${alts && !S.stop ? 'true' : 'false'}`;
   const get = async url => {
     let r; try{ r = await fetch(url); }catch{ throw new Error('Could not reach the routing service. Check your connection.'); }
     const j = await r.json().catch(() => ({}));
@@ -1761,7 +1841,7 @@ async function fetchTomTom(from, to, alts){
   const locs = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to].map(p => p[0].toFixed(6)+','+p[1].toFixed(6)).join(':');
   if (S.stop) alts = false;
   const u = `https://api.tomtom.com/routing/1/calculateRoute/${locs}/json`
-    + `?key=${encodeURIComponent(trafficKey())}&traffic=true&travelMode=car&routeType=fastest&instructionsType=coded&sectionType=traffic&computeTravelTimeFor=all`
+    + `?key=${encodeURIComponent(trafficKey())}&traffic=true&travelMode=car&routeType=fastest&instructionsType=coded&sectionType=traffic&sectionType=speedLimit&computeTravelTimeFor=all`
     + (alts ? '&maxAlternatives=2' : '') + av.map(a => '&avoid='+a).join('');
   const r = await fetch(u);
   const j = await r.json().catch(() => ({}));
@@ -1773,6 +1853,8 @@ async function fetchTomTom(from, to, alts){
   return j.routes.map(tt => {
     const R = prepRoute(ttToOsrm(tt));
     R.engine = 'tomtom'; R.delay = tt.summary.trafficDelayInSeconds || 0;
+    const sl = (tt.sections || []).filter(x => x.sectionType === 'SPEED_LIMIT' && x.maxSpeedLimitInKmh);
+    if (sl.length){ R.limits = new Array(R.coords.length).fill(null); for (const x of sl) for (let i = x.startPointIndex; i < x.endPointIndex && i < R.limits.length; i++) R.limits[i] = x.maxSpeedLimitInKmh; }
     R.traffic = (tt.sections || []).filter(s => s.sectionType === 'TRAFFIC')
       .map(s => ({ a:s.startPointIndex, b:s.endPointIndex, mag:s.magnitudeOfDelay ?? 0, cat:s.simpleCategory, delay:s.delayInSeconds || 0 }));
     return R;
@@ -1858,7 +1940,7 @@ function renderMute(){ const b = $('#btnMute'); b.innerHTML = settings.voice ? I
 $('#btnMute').onclick = () => { settings.voice = !settings.voice; saveSettings(); if (!settings.voice) speechSynthesis?.cancel?.(); renderMute(); toast(settings.voice ? 'Voice on' : 'Voice muted', 1500); };
 $('#btnOverview').onclick = () => {
   const n = S.nav; if (!n) return;
-  S.follow = false; $('#btnRecenter').hidden = false;
+  S.follow = false; $('#btnRecenter').hidden = false; apply3D();
   const rest = n.route.coords.slice(Math.max(0, snap(n.route, S.pos || n.route.coords[0], n.along - 150).i));
   northUp();
   map.fitBounds(L.latLngBounds(rest.concat(S.pos ? [S.pos] : [])), { paddingTopLeft:[40, $('#top').offsetHeight + 30], paddingBottomRight:[80, $('#navbar').offsetHeight + 40] });
@@ -2380,6 +2462,91 @@ $('#hudv').addEventListener('click', e => {
   else hudClose();
 });
 
+/* ---------- 3D driving view (CSS perspective tilt while following during navigation) ---------- */
+const TILT = 46, PERSP = 1000, HORIZON = .2, CAR_AT = .76;   // degrees, px, horizon height, car height (fractions of screen)
+let is3D = false;
+function want3D(){ return !!(settings.view3d && S.nav && S.follow && !PLACE); }
+function apply3D(){
+  const w = want3D(); if (w === is3D) return;
+  is3D = w;
+  document.body.classList.toggle('three-d', w);
+  const a = $('#attr3d'); a.hidden = !w; if (w) a.innerHTML = map.attributionControl?.getContainer()?.innerHTML || '© OpenStreetMap contributors';
+  map.invalidateSize({ pan:false });
+  if (S.pos && S.follow) followCam();
+}
+// Pixels the car should sit below the map container's centre so it lands at CAR_AT of the screen after the tilt.
+function carOffsetPx(){
+  const ch = map.getSize().y;
+  if (!is3D) return S.nav ? ch * .22 : 0;
+  const H = window.innerHeight, th = rad(TILT), oy = HORIZON * H, target = CAR_AT * H;
+  const scr = d => oy + (H - d * Math.cos(th) - oy) * PERSP / (PERSP + d * Math.sin(th));
+  let lo = 0, hi = ch;
+  for (let i = 0; i < 28; i++){ const m = (lo + hi) / 2; if (scr(m) > target) lo = m; else hi = m; }
+  return ch / 2 - (lo + hi) / 2;
+}
+
+/* ---------- alternate routes while driving ---------- */
+const altLayer = L.layerGroup().addTo(map);
+async function showAlts(){
+  const n = S.nav; if (!n || !S.pos) return;
+  openModal('<h3 class="label" style="margin-top:0">Routes from here</h3><p class="hint">Finding routes…</p>');
+  mSheet.dataset.view = 'alts';
+  try{
+    const rs = await fetchRoutes(S.pos, S.dest.ll, true);
+    if (S.nav !== n || mSheet.dataset.view !== 'alts') return;
+    S.altRoutes = rs; altLayer.clearLayers();
+    rs.forEach(r => { L.polyline(r.coords, { color:css('--casing'), weight:9, opacity:.8, interactive:false }).addTo(altLayer);
+      L.polyline(r.coords, { color:css('--route-alt'), weight:6, interactive:false }).addTo(altLayer); });
+    const cur = n.remT ?? n.route.duration;
+    mSheet.innerHTML = `<div class="grab"></div><h3 class="label" style="margin-top:0">Routes from here</h3>
+      <ul class="routes"><li><div class="route-opt on"><b>${fmtDur(cur)}</b><span>Current route</span><em>Now</em></div></li>
+      ${rs.map((r, i) => { const d = Math.round((r.duration - cur) / 60);
+        return `<li><button class="route-opt" data-alt="${i}"><b>${fmtDur(r.duration)}</b><span>${fd(r.distance)} · via ${esc(r.via)}</span>
+          <em class="${d < 0 ? 'faster' : ''}">${d === 0 ? 'Same' : d < 0 ? d+' min' : '+'+d+' min'}</em>${routeExtra(r)}</button></li>`; }).join('')}</ul>
+      <p class="fine">Pick a route to switch to it. Gray lines on the map show the options.</p>`;
+  }catch(e){ if (mSheet.dataset.view === 'alts') mSheet.innerHTML = `<div class="grab"></div><p class="err">${esc(e.message === 'tomtom' ? 'Couldn’t find other routes right now.' : e.message)}</p>`; }
+}
+mSheet.addEventListener('click', e => {
+  const b = e.target.closest('[data-alt]'); if (!b) return;
+  const r = S.altRoutes?.[+b.dataset.alt], n = S.nav; if (!r || !n) return;
+  n.route = r; n.spoken = {}; n.off = 0; n.along = 0; if (S.sim) S.sim.along = 0;
+  drawNavRoute(); startFasterChecks(); closeModal(); toast('Route changed'); say('Route changed');
+});
+$('#btnAlts').onclick = showAlts;
+
+/* ---------- parking near the destination ---------- */
+async function showDestParking(){
+  const d = S.dest; if (!d) return;
+  openModal(`<h3 class="label" style="margin-top:0">Parking near ${esc(d.name)}</h3><p class="hint">Looking for parking…</p>`);
+  mSheet.dataset.view = 'dpark';
+  const ql = `[out:json][timeout:20];nwr[amenity=parking][access!~"^(private|no|customers)$"](around:800,${d.lat.toFixed(5)},${d.lng.toFixed(5)});out center tags 40;`;
+  try{
+    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    S.dParks = (j.elements || []).map(e => {
+      const t = e.tags || {}, lat = e.lat ?? e.center?.lat, lng = e.lon ?? e.center?.lon; if (lat == null) return null;
+      const bits = [t.parking === 'multi-storey' ? 'Garage' : t.parking === 'underground' ? 'Underground' : t.parking === 'street_side' ? 'Street' : 'Lot',
+        t.fee === 'no' ? 'Free' : t.fee === 'yes' ? 'Paid' : '', t.capacity ? t.capacity+' spaces' : ''].filter(Boolean).join(' · ');
+      return { name:t.name || 'Parking', lat, lng, info:bits, walk:dist([lat, lng], [d.lat, d.lng]) };
+    }).filter(Boolean).sort((a, b) => a.walk - b.walk).slice(0, 12);
+    if (mSheet.dataset.view !== 'dpark') return;
+    mSheet.innerHTML = `<div class="grab"></div><h3 class="label" style="margin-top:0">Parking near ${esc(d.name)}</h3>` + (S.dParks.length
+      ? `<ul class="list">${S.dParks.map((p, i) => `<li><button class="row" data-dpark="${i}"><span class="park-badge">P</span>
+          <span class="row-txt"><b>${esc(p.name)}</b><small>${esc(p.info)}</small></span><span class="row-d">${Math.max(1, Math.round(p.walk / 80))} min walk</span></button></li>`).join('')}</ul>`
+      : '<p class="hint">No public parking mapped within half a mile.</p>');
+  }catch{ if (mSheet.dataset.view === 'dpark') mSheet.innerHTML = '<div class="grab"></div><p class="err">Couldn’t search for parking. Try again in a moment.</p>'; }
+}
+mSheet.addEventListener('click', e => {
+  const b = e.target.closest('[data-dpark]'); if (!b) return;
+  const p = S.dParks?.[+b.dataset.dpark]; if (!p || !S.dest) return;
+  const orig = S.dest.name;
+  S.dest = { name:p.name === 'Parking' ? 'Parking near '+orig : p.name, addr:'Parking near '+orig, lat:p.lat, lng:p.lng, ll:[p.lat, p.lng], isParking:true };
+  destMarker?.setLatLng(S.dest.ll);
+  closeModal(); toast('Heading to parking'); reroute(true);
+});
+$('#bPark').onclick = showDestParking;
+
 /* ---------- boot ---------- */
 applyTheme(); renderIdle(); drawReports(); drawPark(); renderMute(); updateSpeedo(); startGPS(); refreshConditions(true);
 // Android grants orientation without a prompt, so restore the compass; iOS needs a tap each visit.
@@ -2388,3 +2555,4 @@ if (store.get('compass', false) && typeof DeviceOrientationEvent !== 'undefined'
 </script>
 </body>
 </html>
+ 
