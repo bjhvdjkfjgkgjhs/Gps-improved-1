@@ -13,18 +13,18 @@
 :root{
   --bg:#e9eeeb; --panel:#ffffff; --panel-2:#f1f5f3; --ink:#13201b; --muted:#5b6a63; --line:#d3dcd8;
   --guide:#006b54; --guide-ink:#ffffff; --warn:#ffc20e; --warn-ink:#1a1a1a; --danger:#c8312b;
-  --route:#1a6fe0; --route-alt:#8fa7c6; --casing:#ffffff; --sky:#d7e4ec;
+  --route:#1a9be6; --route-alt:#8fa7c6; --casing:#ffffff; --sky:#d7e4ec; --wz:#33ccff;
   --font:'Overpass',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'Overpass Mono',ui-monospace,'SF Mono',Menlo,monospace;
   --bottom:180px; --shadow:0 6px 22px rgba(10,25,20,.22);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0d1311; --panel:#18211e; --panel-2:#212c28; --ink:#e6eeea; --muted:#93a39c; --line:#2b3733;
-  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
+  --guide:#00785e; --route:#33ccff; --route-alt:#4c5f78; --casing:#0b3d52; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
 }}
 :root[data-theme="dark"]{
   --bg:#0d1311; --panel:#18211e; --panel-2:#212c28; --ink:#e6eeea; --muted:#93a39c; --line:#2b3733;
-  --guide:#00785e; --route:#4aa3ff; --route-alt:#4c5f78; --casing:#0b1a2e; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
+  --guide:#00785e; --route:#33ccff; --route-alt:#4c5f78; --casing:#0b3d52; --sky:#0a121c; color-scheme:dark; --shadow:0 6px 22px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -400,6 +400,90 @@ body.placing #sheet,body.placing #navbar{visibility:hidden}
 .route-opt em.faster{color:var(--guide)}
 div.route-opt{cursor:default}
 
+/* ===== Waze-style driving UI ===== */
+body:not(.navigating) .nav-only{display:none}
+.sim-pill{font:800 14px var(--mono);width:52px;height:40px;border-radius:12px}
+/* instruction card: one dark look in both themes, like Waze */
+#banner{background:#0b0d0f;color:#fff;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 8px 26px rgba(0,0,0,.45)}
+#banner .b-main{padding:12px 16px 12px 14px;gap:14px}
+#banner .b-icon{width:58px;height:58px;color:#fff}
+#banner .b-dist{font:800 24px/1.1 var(--font);letter-spacing:0}
+#banner .b-dist small{font:800 24px var(--font);text-transform:none;letter-spacing:0;opacity:1;margin-left:0}
+#banner .b-street{font:800 26px/1.15 var(--font);color:var(--wz);margin-top:2px}
+#banner .b-lanes{display:flex;margin:0;padding:10px 12px 0;background:none;border-radius:0;gap:0;width:auto;max-width:none}
+#banner .lane{flex:1;max-width:58px;width:auto;height:34px;opacity:.35;color:#fff;position:relative}
+#banner .lane+.lane{border-left:0}
+#banner .lane+.lane::before{content:"";position:absolute;left:0;bottom:2px;width:2px;height:9px;border-radius:1px;background:#6b7378}
+#banner .lane.on{opacity:1}
+#banner .b-then{display:flex;width:100%;margin:0;border-radius:0;padding:9px 16px;background:#1c2024;gap:12px;text-transform:none;letter-spacing:0;font:700 17px var(--font);color:var(--wz);align-items:center}
+#banner .bt-i{width:26px;height:26px;color:#fff;display:grid;place-items:center;flex:none}
+#banner .bt-i svg{width:26px;height:26px}
+#banner .bt-l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#banner .b-park{margin:0 16px 12px}
+.shields{display:inline-flex;gap:6px;vertical-align:middle;align-items:center}
+.shield{display:block;flex:none}
+#banner .b-street .shield{height:34px;width:auto}
+.shield-txt{display:inline-block;padding:1px 7px;border-radius:5px;background:#fff;color:#111;font:800 .8em var(--font)}
+/* bottom bar */
+#navbar{display:block;padding-top:8px}
+.wz-bar{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;gap:10px}
+.wz-round{width:52px;height:52px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;color:var(--ink)}
+.wz-round svg{width:24px;height:24px}
+.wz-mid{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 0 4px;min-width:0}
+.wz-grab{width:40px;height:5px;border-radius:3px;background:var(--line)}
+.wz-row{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:baseline;column-gap:0}
+#eta{grid-column:1/-1;text-align:center;font:800 32px/1.05 var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}
+.wz-sub{font:600 17px var(--font);color:var(--muted);font-variant-numeric:tabular-nums}
+#remD::before{content:"•";margin:0 9px}
+.wz-row #eta{grid-row:1}
+.wz-row #remT,.wz-row #remD{grid-row:2}
+/* speedometer ring + overlapping limit sign */
+.speedo{position:relative;width:78px;height:78px;border:0;background:color-mix(in srgb,var(--panel) 94%,transparent)}
+.sp-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(135deg)}
+.sp-track,.sp-arc{fill:none;stroke-width:5;stroke-linecap:round}
+.sp-track{stroke:var(--line);stroke-dasharray:146.1 999}
+.sp-arc{stroke:var(--ink);stroke-dasharray:0 999;transition:stroke-dasharray .4s}
+.sp-arc.over{stroke:var(--danger)}
+.speedo b{position:relative;font:800 30px/1 var(--font);font-variant-numeric:tabular-nums}
+.speedo span{position:relative;letter-spacing:.02em;text-transform:none;font-size:12px}
+.speedo.over{border:0}
+#limit{align-self:flex-start;margin:-8px 0 0 -14px;z-index:1}
+/* current street */
+#streetPill{position:fixed;z-index:545;left:50%;transform:translateX(-50%);bottom:calc(var(--bottom) + 16px);max-width:max(140px,calc(100vw - 280px));
+  padding:9px 18px;border-radius:999px;background:#0b0d0f;color:#fff;font:800 17px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none}
+#streetPill .shield{height:24px;width:auto}
+/* car + route, Waze colors */
+.car .halo{fill:#5d6b78;opacity:.32}
+.car .arrow{fill:var(--wz);stroke:#effcff;stroke-width:2}
+.car .arrow-hl{fill:#a6ecff}
+.sig{background:none;border:0}
+.sig svg{width:16px;height:30px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.trip-links{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.trip-links .btn{height:44px;padding:0 20px}
+/* landscape phone: card top-left, bar centered (Waze landscape) */
+@media (orientation: landscape) and (max-height: 600px){
+  #top{left:max(10px,env(safe-area-inset-left,0px));right:auto;width:min(46vw,500px);margin:0;padding-left:0;padding-right:0;padding-top:calc(env(safe-area-inset-top,0px) + 8px)}
+  #sheet,#place{left:max(10px,env(safe-area-inset-left,0px));right:auto;width:min(46vw,500px);margin:0;max-height:calc(100% - 84px);border-radius:20px 20px 0 0}
+  #navbar{left:50%;right:auto;transform:translateX(-50%);width:min(78vw,860px);margin:0;padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+  .wz-mid{gap:4px}
+  .wz-row{display:flex;gap:26px;align-items:baseline}
+  #eta{font-size:30px}
+  .wz-sub{font-size:19px}
+  #remD::before{content:none}
+  #banner .b-main{padding:8px 14px}
+  #banner .b-icon{width:46px;height:46px}
+  #banner .b-dist,#banner .b-dist small{font-size:20px}
+  #banner .b-street{font-size:22px}
+  #banner .b-lanes{padding-top:6px}
+  #banner .lane{height:28px}
+  #banner .b-then{padding:6px 14px;font-size:15px}
+  .fab{width:46px;height:46px}
+  #fabs{gap:8px}
+  .compass{width:52px;height:52px}
+  #streetPill{left:calc(max(12px,env(safe-area-inset-left,0px)) + 150px);transform:none;max-width:24vw}
+  #modal .sheet{max-height:92vh}
+}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -419,11 +503,11 @@ div.route-opt{cursor:default}
     <button id="micBtn" class="icon-btn" aria-label="Search by voice" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
   </div>
   <div id="banner" hidden aria-live="polite">
+    <div id="bLanes" class="b-lanes" hidden></div>
     <div class="b-main">
       <div id="bIcon" class="b-icon"></div>
       <div class="b-text"><div id="bDist" class="b-dist"></div><div id="bStreet" class="b-street"></div></div>
     </div>
-    <div id="bLanes" class="b-lanes" hidden></div>
     <div id="bThen" class="b-then" hidden></div>
     <button id="bPark" class="b-park" hidden><span>P</span>Parking near destination</button>
   </div>
@@ -434,8 +518,8 @@ div.route-opt{cursor:default}
 </header>
 
 <div id="hud">
+  <div id="speedo" class="speedo"><svg class="sp-ring" viewBox="0 0 72 72" aria-hidden="true"><circle class="sp-track" cx="36" cy="36" r="31"/><circle id="spArc" class="sp-arc" cx="36" cy="36" r="31"/></svg><b id="spd">0</b><span id="spdU">mph</span></div>
   <div id="limit" class="limit" hidden><span>SPEED<br>LIMIT</span><b id="limitVal">35</b></div>
-  <div id="speedo" class="speedo"><b id="spd">0</b><span id="spdU">mph</span></div>
   <div id="alt" class="alt" hidden><span>Elev</span><b id="altVal"></b></div>
   <button id="wx" class="wxchip" hidden aria-label="Current weather"></button>
 </div>
@@ -447,26 +531,27 @@ div.route-opt{cursor:default}
       <text class="tn" x="24" y="6.2">N</text><text x="24" y="47">S</text><text x="45.5" y="26.5">E</text><text x="2.5" y="26.5">W</text></svg>
     <small id="cmpTxt">Compass</small>
   </button>
+  <button id="btnMute" class="fab nav-only" aria-label="Mute voice"></button>
+  <button id="btnSim" class="fab sim-pill" hidden aria-label="Simulation speed">×1</button>
   <button id="btnLayers" class="fab" aria-label="Map layers and settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l9.5 5L12 13 2.5 8z"/><path d="M2.5 12.5L12 17.5l9.5-5"/><path d="M2.5 16.5L12 21.5l9.5-5"/></svg></button>
   <button id="btnRecenter" class="fab" aria-label="Recenter on my location" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7.5 19-7.5-4.5L4.5 21z"/></svg></button>
   <button id="btnReport" class="fab fab-warn" aria-label="Report something on the road"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20z"/><path d="M12 10v4M12 17.2v.1"/></svg></button>
 </div>
 
+<div id="streetPill" hidden></div>
 <section id="sheet" class="sheet"></section>
 
 <section id="navbar" class="sheet" hidden>
-  <div id="navbarInner" style="display:flex;align-items:center;gap:10px">
-    <button id="tripBtn" class="trip-btn" aria-label="Trip details">
-      <span class="nb-cell eta"><b id="eta">--:--</b><span>arrival</span></span>
-      <span class="nb-cell"><b id="remT">--</b><span id="remD">--</span></span>
+  <div class="wz-bar">
+    <button id="btnNavSearch" class="wz-round" aria-label="Find a stop along the way"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></button>
+    <button id="tripBtn" class="wz-mid" aria-label="Trip details and end drive">
+      <span class="wz-grab"></span>
+      <span class="wz-row"><span id="remT" class="wz-sub">--</span><b id="eta">--:--</b><span id="remD" class="wz-sub">--</span></span>
     </button>
-    <div class="nb-spacer"></div>
-    <button id="btnSim" class="pill" hidden aria-label="Simulation speed">×1</button>
-    <button id="btnMute" class="nb-ico" aria-label="Mute voice"></button>
-    <button id="btnAlts" class="nb-ico" aria-label="Other routes from here"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7l-6-6V4M12 14l6-6V4"/><path d="M3.5 6.5L6 4l2.5 2.5M15.5 6.5L18 4l2.5 2.5"/></svg></button>
-    <button id="btnOverview" class="nb-ico" hidden aria-label="Route overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
-    <button id="btnEnd">End</button>
+    <button id="btnAlts" class="wz-round" aria-label="Other routes from here"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7l-6-6V4M12 14l6-6V4"/><path d="M3.5 6.5L6 4l2.5 2.5M15.5 6.5L18 4l2.5 2.5"/></svg></button>
   </div>
+  <button id="btnOverview" hidden aria-label="Route overview"></button>
+  <button id="btnEnd" hidden>End</button>
 </section>
 
 <section id="place" hidden aria-live="polite"></section>
@@ -511,7 +596,7 @@ const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', bas
   srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
   trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true,
   orient:'heading', useCompass:false, speedAlert:true,
-  camAlerts:true, view3d:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
+  camAlerts:true, view3d:true, showSignals:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 const mq = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => {
@@ -624,7 +709,7 @@ ro.observe($('#sheet')); ro.observe($('#navbar')); ro.observe($('#place'));
 
 /* ---------- position & GPS ---------- */
 const carIcon = L.divIcon({ className:'car', iconSize:[44,44], iconAnchor:[22,22],
-  html:'<div class="car-rot"><svg viewBox="0 0 44 44" style="overflow:visible"><defs><radialGradient id="beamGrad" cx="22" cy="22" r="40" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a6fe0" stop-opacity=".45"/><stop offset="1" stop-color="#1a6fe0" stop-opacity="0"/></radialGradient></defs><path class="beam" d="M22 22L4 -14A40 40 0 0 1 40 -14z"/><circle class="halo" cx="22" cy="22" r="20"/><path class="arrow" d="M22 7l11 27-11-6.5L11 34z"/></svg></div>' });
+  html:'<div class="car-rot"><svg viewBox="0 0 44 44" style="overflow:visible"><defs><radialGradient id="beamGrad" cx="22" cy="22" r="40" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a6fe0" stop-opacity=".45"/><stop offset="1" stop-color="#1a6fe0" stop-opacity="0"/></radialGradient></defs><path class="beam" d="M22 22L4 -14A40 40 0 0 1 40 -14z"/><ellipse class="halo" cx="22" cy="23" rx="20" ry="19"/><path class="arrow" d="M22 6.5L34 32.5 22 27 10 32.5z"/><path class="arrow-hl" d="M22 6.5L22 27 10 32.5z"/></svg></div>' });
 let carMarker = null, accCircle = null;
 function drawCar(){
   if (!carMarker){
@@ -783,13 +868,14 @@ function updateSpeedo(){
   const v = speedDisp(S.speed);
   $('#spd').textContent = v; $('#spdU').textContent = imperial() ? 'mph' : 'km/h';
   const lim = $('#limit');
-  if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
+  if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); renderSpeedRing(v, 0, false); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
   const lv = imperial() ? Math.round(S.limitKmh/1.609344/5)*5 : Math.round(S.limitKmh);
   lim.hidden = false; lim.classList.toggle('metric', !imperial()); lim.classList.toggle('est', !!S.limitEst);
   lim.title = S.limitEst ? 'Estimated from the road type. No posted limit is mapped here.' : 'Posted speed limit';
   $('#limitVal').textContent = lv;
   const over = v > lv + (imperial() ? 4 : 6);
   lim.classList.toggle('over', over && !S.limitEst); $('#speedo').classList.toggle('over', over);
+  renderSpeedRing(v, lv, over && !S.limitEst);
   if (over && !S.wasOver && S.speed > 4 && !S.limitEst) chime();
   if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; $('#hudv').classList.toggle('over', over); }
   S.wasOver = over;
@@ -963,7 +1049,7 @@ sheet.addEventListener('click', e => {
 
 /* ---------- destination & routing ---------- */
 const destIcon = L.divIcon({ className:'pin', iconSize:[34,44], iconAnchor:[17,42],
-  html:'<svg viewBox="0 0 34 44"><path d="M17 1C8.2 1 1.5 7.6 1.5 16.2 1.5 27.5 17 43 17 43s15.5-15.5 15.5-26.8C32.5 7.6 25.8 1 17 1z" fill="#d93a2b" stroke="#fff" stroke-width="2"/><circle cx="17" cy="16" r="5.5" fill="#fff"/></svg>' });
+  html:'<svg viewBox="0 0 34 44"><defs><pattern id="chk" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#fff"/><rect width="3" height="3" fill="#111"/><rect x="3" y="3" width="3" height="3" fill="#111"/></pattern></defs><path d="M17 43l-6-9h12z" fill="#fff"/><circle cx="17" cy="16" r="15" fill="#fff" stroke="rgba(0,0,0,.25)"/><circle cx="17" cy="16" r="12" fill="url(#chk)"/></svg>' });
 let destMarker = null;
 const routeLayer = L.layerGroup().addTo(map);
 let navLine = null, navCasing = null;
@@ -1089,7 +1175,7 @@ function startNav(simulate){
   renderMute(); setTimeout(apply3D, 0); WX.told.forEach(id => { if (String(id).startsWith('ahead:')) WX.told.delete(id); });
   routeLayer.clearLayers(); drawNavRoute();
   $('#searchbar').hidden = true; $('#banner').hidden = false;
-  sheet.hidden = true; $('#navbar').hidden = false; renderLegend();
+  sheet.hidden = true; $('#navbar').hidden = false; renderLegend(); document.body.classList.add('navigating');
   S.follow = true; $('#btnRecenter').hidden = true;
   keepAwake(true);
   const first = route.steps[0], second = route.steps[1];
@@ -1156,11 +1242,13 @@ function renderNav(k, toNext, remD, remT){
   const R = S.nav.route, step = R.steps[k];
   const d = fmtDist(Math.max(0, toNext));
   $('#bIcon').innerHTML = turnSVG(step);
-  $('#bDist').innerHTML = `${d.v}<small>${d.u}</small>`;
-  $('#bStreet').textContent = S.nav.rerouting ? 'Rerouting…' : instr(step);
+  $('#bDist').innerHTML = `${d.v} <small>${d.u === 'mi' ? (d.v === '1.0' || d.v === '1' ? 'mile' : 'miles') : d.u === 'ft' ? 'feet' : d.u}</small>`;
+  $('#bStreet').innerHTML = S.nav.rerouting ? 'Rerouting…' : stepLabelHTML(step);
+  $('#bStreet').setAttribute('aria-label', instr(step));
   const nxt = R.steps[k+1];
-  if (nxt && (R.stepStart[k+1] - R.stepStart[k]) < 300){ $('#bThen').hidden = false; $('#bThen').innerHTML = 'Then '+turnSVG(nxt); }
+  if (nxt){ $('#bThen').hidden = false; $('#bThen').innerHTML = `<span class="bt-i">${turnSVG(nxt)}</span><span class="bt-l">${stepLabelHTML(nxt)}</span>`; }
   else $('#bThen').hidden = true;
+  const rn = roadNowHTML(), pill = $('#streetPill'); pill.hidden = !rn; if (rn && pill.innerHTML !== rn) pill.innerHTML = rn;
   renderLanes(step, toNext);
   $('#eta').textContent = clock(remT); $('#remT').textContent = fmtDur(remT); $('#remD').textContent = fd(remD);
   if (!$('#hudv').hidden){ $('#hIcon').innerHTML = turnSVG(step); $('#hDist').innerHTML = `${d.v}<small>${d.u}</small>`; $('#hStreet').textContent = instr(step); $('#hEta').textContent = clock(remT)+' · '+fd(remD); }
@@ -1206,13 +1294,13 @@ function arrive(){
 }
 function endNav(keepDest){
   logTrip(S.nav); hudClose(); altLayer.clearLayers(); $('#bPark').hidden = true;
-  CAM.list = []; CAM.layer.clearLayers(); CAM.route = null;
+  CAM.list = []; CAM.layer.clearLayers(); CAM.route = null; SIG.layer.clearLayers(); $('#streetPill').hidden = true;
   stopSim(); keepAwake(false); clearInterval(fasterT);
   S.stop = null; drawStop();
   if (S.nav?.tLayer) map.removeLayer(S.nav.tLayer);
   $('#bLanes').hidden = true; WX.ahead = []; renderWxAlert();
   if (navLine){ map.removeLayer(navLine); map.removeLayer(navCasing); navLine = navCasing = null; }
-  S.nav = null; renderLegend(); apply3D();
+  S.nav = null; renderLegend(); apply3D(); document.body.classList.remove('navigating');
   $('#banner').hidden = true; $('#searchbar').hidden = false; $('#navbar').hidden = true; sheet.hidden = false;
   if (!keepDest) closePreview();
   else { S.routes = []; routeLayer.clearLayers(); if (destMarker){ map.removeLayer(destMarker); destMarker = null; } S.dest = null; q.value=''; $('#clearQ').hidden = true; renderIdle(); }
@@ -1349,6 +1437,7 @@ function renderLayers(){
     ${tg('useCompass', 'Phone compass', 'Point the arrow, and the map, the way your phone faces when you’re stopped')}
     ${tg('speedAlert', 'Speeding chime', 'Play a tone when you go over the speed limit')}
     ${tg('view3d', '3D driving view', 'Tilt the map toward the horizon while you navigate')}
+    ${tg('showSignals', 'Traffic lights on route', 'Show traffic signals along your route while navigating')}
     ${tg('camAlerts', 'Speed camera alerts', 'Warn before speed and red light cameras mapped on OpenStreetMap')}
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
     <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
@@ -1968,18 +2057,20 @@ function renderTrip(){
   openModal(`<div class="trip-head"><div><b>${n.remT != null ? clock(n.remT) : '--'}</b><span>arrival</span></div>
       <div><b>${n.remT != null ? fmtDur(n.remT) : '--'}</b><span>${n.remD != null ? fd(n.remD) : ''}</span></div>${delay}</div>
     <div class="pv-actions three"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="stop">${S.stop ? 'Change stop' : 'Add stop'}</button><button class="btn" data-trip="overview">Overview</button></div>
-    <button class="link" data-trip="hud">Windshield HUD</button>
+    <div class="trip-links"><button class="link" data-trip="hud">Windshield HUD</button><button class="btn danger" data-trip="end">End drive</button></div>
     ${CAM.list.length ? `<p class="hint">${CAM.list.filter(c => c.along > n.along).length} speed or red light cameras on this route</p>` : ''}
     ${S.stop ? `<p class="hint">Stop: <b>${esc(S.stop.name)}</b></p>` : ''}
     ${wxRouteHTML(R)}
     <h3 class="label">Turns ahead</h3><ol class="steps">${items}</ol>`);
 }
 $('#tripBtn').onclick = renderTrip;
+$('#btnNavSearch').onclick = renderAddStop;
 mSheet.addEventListener('click', e => {
   const b = e.target.closest('[data-trip]'); if (!b) return;
   if (b.dataset.trip === 'share') shareETA();
   if (b.dataset.trip === 'stop') renderAddStop();
   if (b.dataset.trip === 'hud') hudOpen();
+  if (b.dataset.trip === 'end'){ closeModal(); $('#btnEnd').click(); }
   if (b.dataset.trip === 'overview'){ closeModal(); $('#btnOverview').click(); }
 });
 
@@ -2394,15 +2485,15 @@ function toggleFav(p){
 const CAM = { list:[], layer:L.layerGroup().addTo(map), told:new Set(), route:null };
 async function loadCameras(R){
   CAM.list = []; CAM.layer.clearLayers(); CAM.told.clear();
-  if (!settings.camAlerts) return;
   const pts = [];
   for (let i = 0; i < R.coords.length && R.cum[i] < 250000; i++) if (!pts.length || dist(pts[pts.length - 1], R.coords[i]) > 400) pts.push(R.coords[i]);
   pts.push(R.coords[R.coords.length - 1]);
   const line = pts.map(p => p[0].toFixed(5)+','+p[1].toFixed(5)).join(',');
+  if (settings.showSignals) loadSignals(R, line);
   try{
     const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
       body:'data='+encodeURIComponent(`[out:json][timeout:25];(node[highway=speed_camera](around:70,${line});node[enforcement~"^(maxspeed|traffic_signals)$"](around:70,${line}););out tags 400;`) });
-    if (!r.ok || CAM.route !== R) return;
+    if (!r.ok || CAM.route !== R || !settings.camAlerts) return;
     const j = await r.json();
     for (const e of j.elements || []){
       const sn = snap(R, [e.lat, e.lon], 0); if (sn.d > 70) continue;
@@ -2547,6 +2638,71 @@ mSheet.addEventListener('click', e => {
   closeModal(); toast('Heading to parking'); reroute(true);
 });
 $('#bPark').onclick = showDestParking;
+
+/* ---------- road shields (I-75, US 42, KY 18 …) ---------- */
+function shieldSVG(ref){
+  const r = String(ref).trim().replace(/\s+/g, ' ');
+  let m;
+  if ((m = r.match(/^(?:I|IH|Interstate)[- ]?(\d{1,3}[A-Z]?)$/i))){
+    const n = m[1], w = n.length > 2 ? 34 : 28;
+    return `<svg class="shield" viewBox="0 0 ${w} 28" width="${w}" height="28"><path d="M2 3c4 1 8 0 ${w/2-2}-2 ${w/2-6} 2 ${w/2-2} 3 ${w/2-2} 2 0 9-2 17-${w/2-2} 23C4 20 2 12 2 3z" fill="#1d4fa8" stroke="#fff" stroke-width="1.5"/><path d="M2.6 3.4c4 1 8 0 ${w/2-2.6}-1.9 ${w/2-6} 1.9 ${w/2-2.6} 2.9 ${w/2-2.6} 1.9L${w-2.3} 9H2.6z" fill="#c8312b"/><text x="${w/2}" y="20.5" text-anchor="middle" font-family="Overpass,system-ui,sans-serif" font-weight="800" font-size="${n.length > 2 ? 10 : 11.5}" fill="#fff">${esc(n)}</text></svg>`;
+  }
+  if ((m = r.match(/^US[- ]?(\d{1,3}[A-Z]?)$/i))){
+    const n = m[1], w = n.length > 2 ? 32 : 26;
+    return `<svg class="shield" viewBox="0 0 ${w} 28" width="${w}" height="28"><path d="M3 2h${w-6}c0 3 2 4 2 7 0 6-2 8-2 11 0 3-4 5-${w/2-3} 6C${w/2-4} 27 3 25 3 20c0-3-2-5-2-11 0-3 2-4 2-7z" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${w/2}" y="18.5" text-anchor="middle" font-family="Overpass,system-ui,sans-serif" font-weight="800" font-size="${n.length > 2 ? 10.5 : 12.5}" fill="#111">${esc(n)}</text></svg>`;
+  }
+  if ((m = r.match(/^([A-Z]{1,3})[- ]?(\d{1,4}[A-Z]?)$/))){
+    const n = m[2], w = Math.max(26, 9 + n.length * 7.5);
+    return `<svg class="shield" viewBox="0 0 ${w} 22" width="${w}" height="22"><rect x="1" y="1" width="${w-2}" height="20" rx="10" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${w/2}" y="15.5" text-anchor="middle" font-family="Overpass,system-ui,sans-serif" font-weight="800" font-size="12" fill="#111">${esc(n)}</text></svg>`;
+  }
+  return `<span class="shield-txt">${esc(r)}</span>`;
+}
+const shieldsHTML = ref => String(ref || '').split(';').map(x => x.trim()).filter(Boolean).slice(0, 2).map(shieldSVG).join('');
+// What the card shows for a maneuver: the street (or its shields), or a plain instruction when there's no name.
+function stepLabelHTML(step){
+  const t = step.maneuver.type, mod = step.maneuver.modifier || 'straight';
+  if (t === 'arrive') return step.waypoint ? 'Your stop' : esc(S.dest?.name || 'Destination');
+  if ((t === 'continue' || t === 'new name' || t === 'notification') && mod === 'straight') return 'Continue straight';
+  if (t === 'roundabout' || t === 'rotary') return `${ord(step.maneuver.exit || 1)} exit${step.name ? ' · '+esc(step.name) : ''}`;
+  if (step.name) return esc(step.name);
+  if (step.ref) return `<span class="shields">${shieldsHTML(step.ref)}</span>`;
+  return esc(instr(step));
+}
+function roadNowHTML(){
+  const n = S.nav; if (!n) return '';
+  const st = n.route.steps[n.k || 0]; if (!st) return '';
+  if (st.name) return esc(st.name);
+  if (st.ref) return `<span class="shields">${shieldsHTML(st.ref)}</span>`;
+  return '';
+}
+
+/* ---------- traffic signals along the route ---------- */
+const SIG = { layer:L.layerGroup().addTo(map) };
+const sigIcon = L.divIcon({ className:'sig', iconSize:[16,30], iconAnchor:[8,28],
+  html:'<svg viewBox="0 0 16 30"><rect x="1.5" y="1" width="13" height="25" rx="4" fill="#1b1f22" stroke="#fff" stroke-width="1.4"/><circle cx="8" cy="7" r="2.8" fill="#ff4b3e"/><circle cx="8" cy="13.5" r="2.8" fill="#ffc21a"/><circle cx="8" cy="20" r="2.8" fill="#3ddc6a"/></svg>' });
+async function loadSignals(R, line){
+  SIG.layer.clearLayers();
+  try{
+    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+      body:'data='+encodeURIComponent(`[out:json][timeout:25];node[highway=traffic_signals](around:25,${line});out 1500;`) });
+    if (!r.ok || CAM.route !== R) return;
+    const j = await r.json(), kept = [];
+    for (const e of j.elements || []){
+      const p = [e.lat, e.lon];
+      if (kept.some(k => dist(k, p) < 45)) continue;                  // one light per intersection
+      kept.push(p); L.marker(p, { icon:sigIcon, interactive:false, keyboard:false }).addTo(SIG.layer);
+    }
+  }catch{}
+}
+
+/* ---------- Waze-style speedometer ring ---------- */
+const SP_LEN = 2 * Math.PI * 31 * .75;     // 270° arc on r=31
+function renderSpeedRing(v, lv, over){
+  const arc = $('#spArc'); if (!arc) return;
+  const max = lv ? lv * 1.5 : (imperial() ? 80 : 130);
+  arc.style.strokeDasharray = `${(Math.min(1, v / max) * SP_LEN).toFixed(1)} 999`;
+  arc.classList.toggle('over', !!over);
+}
 
 /* ---------- boot ---------- */
 applyTheme(); renderIdle(); drawReports(); drawPark(); renderMute(); updateSpeedo(); startGPS(); refreshConditions(true);
