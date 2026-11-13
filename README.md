@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#006b54">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Guidepost Navigator</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mapbox-gl@3.8.0/dist/mapbox-gl.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&family=Overpass+Mono:wght@600;700&display=swap">
 <style>
 /* Layout: full-bleed map; road-sign banner on top; driving cluster bottom-left; actions bottom-right; bottom sheet. */
@@ -31,19 +31,28 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible{outline:3px solid var(--route);outline-offset:2px}
-#mapWrap{position:fixed;inset:0;z-index:0;overflow:hidden;perspective:1000px;perspective-origin:50% 20%;background:var(--sky)}
-#map{position:absolute;inset:0;background:var(--bg);transform-origin:50% 100%;transition:transform .6s ease}
-body.three-d #map{left:-45%;right:-45%;top:-85%;bottom:0;transform:rotateX(46deg)}
-#horizon{position:fixed;left:0;right:0;top:0;height:30%;z-index:1;pointer-events:none;opacity:0;transition:opacity .6s;
-  background:linear-gradient(var(--sky) 30%, color-mix(in srgb,var(--sky) 60%,transparent) 62%, transparent)}
-body.three-d #horizon{opacity:1}
-body.three-d .car-rot{width:56px;height:56px;margin:-6px}
-body.three-d .leaflet-control-attribution{visibility:hidden}
-#attr3d{position:fixed;z-index:540;right:max(8px,env(safe-area-inset-right,0px));bottom:calc(var(--bottom) + 2px);font-size:10px;color:var(--muted);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:1px 6px;border-radius:4px}
-#attr3d a{color:var(--muted)}
-#map.night .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.88) saturate(.7)}
-.leaflet-bottom{bottom:var(--bottom)!important;transition:bottom .2s}
-.leaflet-control-attribution{font-size:10px;background:color-mix(in srgb,var(--panel) 80%,transparent)!important;color:var(--muted)}
+#mapWrap{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--sky)}
+#map{position:absolute;inset:0;background:var(--bg)}
+.mapboxgl-ctrl-bottom-left,.mapboxgl-ctrl-bottom-right{bottom:var(--bottom)!important;transition:bottom .2s}
+.mapboxgl-ctrl-attrib{font-size:10px}
+.gp-icon{position:absolute;top:0;left:0}
+.gp-pop .mapboxgl-popup-content{background:var(--panel);color:var(--ink);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);font-family:var(--font)}
+.gp-pop .mapboxgl-popup-close-button{color:var(--muted);font-size:20px;padding:2px 8px}
+.gp-pop.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,.gp-pop.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,.gp-pop.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip{border-top-color:var(--panel)}
+.gp-pop.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,.gp-pop.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,.gp-pop.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip{border-bottom-color:var(--panel)}
+.gp-pop.mapboxgl-popup-anchor-left .mapboxgl-popup-tip{border-right-color:var(--panel)}
+.gp-pop.mapboxgl-popup-anchor-right .mapboxgl-popup-tip{border-left-color:var(--panel)}
+/* first-run Mapbox token screen */
+#mbSetup{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:var(--bg);padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.mbs-card{width:min(460px,100%);display:flex;flex-direction:column;gap:12px}
+.mbs-card h1{margin:0;font:800 28px var(--font);text-wrap:balance}
+.mbs-card p,.mbs-card ol{margin:0;line-height:1.5;color:var(--muted)}
+.mbs-card ol{padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.mbs-card a{color:var(--route)}
+.mbs-card code{font-family:var(--mono);background:var(--panel-2);padding:0 4px;border-radius:4px}
+.mbs-card label{font-weight:700;margin-top:6px}
+.mbs-card input{height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);padding:0 14px;font:600 14px var(--mono);min-width:0}
+.mbs-err{color:var(--danger)!important;font-weight:600;min-height:1.2em}
 .leaflet-control-attribution a{color:var(--muted)}
 
 /* Top */
@@ -484,6 +493,11 @@ body:not(.navigating) .nav-only{display:none}
   #modal .sheet{max-height:92vh}
 }
 
+.limit.unk{opacity:.6}
+.limit.unk b{color:#666}
+
+body.navigating .car-rot{width:58px;height:58px;margin:-7px}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -492,8 +506,6 @@ body:not(.navigating) .nav-only{display:none}
 </head>
 <body>
 <div id="mapWrap"><div id="map"></div></div>
-<div id="horizon"></div>
-<div id="attr3d" hidden></div>
 
 <header id="top">
   <div id="searchbar">
@@ -563,11 +575,35 @@ body:not(.navigating) .nav-only{display:none}
   </div>
   <div class="h-bar"><button data-h="mirror">Flip for windshield</button><button data-h="exit">Exit HUD</button></div>
 </div>
+<div id="mbSetup" hidden>
+  <div class="mbs-card">
+    <h1>Connect Mapbox</h1>
+    <p>Guidepost draws its map, traffic and live-traffic routes with Mapbox. Paste your Mapbox <b>public token</b> to start.</p>
+    <ol>
+      <li>Sign in or sign up free at <a href="https://account.mapbox.com/" target="_blank" rel="noopener">account.mapbox.com</a>.</li>
+      <li>Copy the <b>Default public token</b> (it starts with <code>pk.</code>).</li>
+      <li>Paste it below. It’s saved on this device only.</li>
+    </ol>
+    <label for="mbTok">Mapbox public token</label>
+    <input id="mbTok" type="text" autocomplete="off" spellcheck="false" placeholder="pk.eyJ1Ijoi…">
+    <p id="mbSetupErr" class="mbs-err"></p>
+    <button id="mbSave" class="btn primary">Start driving</button>
+  </div>
+</div>
 <div id="modal" hidden><section class="sheet" id="modalSheet"></section></div>
 <div id="toast" hidden role="status"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.8.0/dist/mapbox-gl.js"></script>
+<script>
+/* Paste a Mapbox public token (starts with pk.) here to skip the setup screen, or enter it in the app. */
+var MAPBOX_TOKEN = '';
+document.getElementById('mbSave').onclick = () => {
+  const v = document.getElementById('mbTok').value.trim();
+  if (!/^pk\./.test(v)){ document.getElementById('mbSetupErr').textContent = 'That doesn’t look like a public token. It should start with pk.'; return; }
+  try{ localStorage.setItem('gp_mbtoken', JSON.stringify(v)); }catch{}
+  location.reload();
+};
+</script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -589,6 +625,22 @@ function bearing(a, b){
   return (deg(Math.atan2(y, x)) + 360) % 360;
 }
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+/* OpenStreetMap Overpass queries, with mirror servers when the main one is busy or rate-limiting */
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+let opFirst = 0;
+async function opFetch(opts){
+  let last = null;
+  for (let i = 0; i < OVERPASS.length; i++){
+    const k = (opFirst + i) % OVERPASS.length;
+    try{
+      const r = await fetch(OVERPASS[k], opts);
+      if (r.ok){ opFirst = k; return r; }
+      last = r; if (r.status !== 429 && r.status < 500) return r;
+    }catch(e){ last = null; }
+  }
+  if (last) return last;
+  throw new Error('overpass');
+}
 
 /* ---------- settings & theme ---------- */
 const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', base:'street',
@@ -604,15 +656,339 @@ const isDark = () => {
   return settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches);
 };
 
-const map = L.map('map', { zoomControl:false, attributionControl:true, zoomSnap:.25,
-  rotate:true, bearing:0, rotateControl:false, touchRotate:false, shiftKeyRotate:false }).setView([40.7128, -74.006], 13);
+/* ---------- Mapbox GL engine behind a small Leaflet-style API ----------
+   The rest of the app talks to "L" and "map" the way it did with Leaflet; this layer turns that into
+   Mapbox GL sources, layers, markers and popups. Zoom numbers keep Leaflet's 256-px scale (Mapbox zoom + 1). */
+const MB_TOKEN = (typeof MAPBOX_TOKEN === 'string' && MAPBOX_TOKEN) || store.get('mbtoken', '') || '';
+if (!MB_TOKEN || typeof mapboxgl === 'undefined'){
+  document.getElementById('mbSetup').hidden = false;
+  if (typeof mapboxgl === 'undefined' && MB_TOKEN) document.getElementById('mbSetupErr').textContent = 'The Mapbox map library didn’t load. Check your connection and reload.';
+  throw new Error('Mapbox token needed');
+}
+mapboxgl.accessToken = MB_TOKEN;
+
+const L = (() => {
+  let mb = null, shim = null, seq = 0;
+  const GL = { ready:false, items:new Set(), order:[], objects:new Map(), popup:null };
+  const Z_LABELS = 500;
+
+  class LatLng { constructor(lat, lng){ this.lat = lat; this.lng = lng; } }
+  const toLL = p => p instanceof LatLng ? p : Array.isArray(p) ? new LatLng(+p[0], +p[1]) : new LatLng(+p.lat, +(p.lng ?? p.lon));
+  const lnglat = p => { const q = toLL(p); return [q.lng, q.lat]; };
+  const isPt = p => p instanceof LatLng || (Array.isArray(p) && typeof p[0] === 'number') || (p && typeof p === 'object' && 'lat' in p && !Array.isArray(p));
+
+  class Bounds {
+    constructor(pts){ this.s = Infinity; this.w = Infinity; this.n = -Infinity; this.e = -Infinity; (pts || []).forEach(p => this.extend(p)); }
+    extend(p){
+      if (p instanceof Bounds){ if (p.isValid()){ this.extend([p.s, p.w]); this.extend([p.n, p.e]); } return this; }
+      if (!isPt(p)){ (p || []).forEach(x => this.extend(x)); return this; }
+      const q = toLL(p); this.s = Math.min(this.s, q.lat); this.n = Math.max(this.n, q.lat); this.w = Math.min(this.w, q.lng); this.e = Math.max(this.e, q.lng); return this;
+    }
+    isValid(){ return isFinite(this.s); }
+    getSouth(){ return this.s; } getNorth(){ return this.n; } getWest(){ return this.w; } getEast(){ return this.e; }
+    getCenter(){ return new LatLng((this.s + this.n) / 2, (this.w + this.e) / 2); }
+    pad(r){ const dl = (this.n - this.s) * r, dw = (this.e - this.w) * r; return new Bounds([[this.s - dl, this.w - dw], [this.n + dl, this.e + dw]]); }
+    contains(b){
+      if (b instanceof Bounds) return b.s >= this.s && b.n <= this.n && b.w >= this.w && b.e <= this.e;
+      const q = toLL(b); return q.lat >= this.s && q.lat <= this.n && q.lng >= this.w && q.lng <= this.e;
+    }
+    intersects(b){ return !(b.s > this.n || b.n < this.s || b.w > this.e || b.e < this.w); }
+    toMB(){ return [[this.w, this.s], [this.e, this.n]]; }
+  }
+
+  const Evented = {
+    on(types, fn){ this._ev = this._ev || {}; String(types).split(/\s+/).forEach(t => (this._ev[t] = this._ev[t] || []).push(fn)); return this; },
+    off(types, fn){ String(types).split(/\s+/).forEach(t => { if (this._ev?.[t]) this._ev[t] = fn ? this._ev[t].filter(f => f !== fn) : []; }); return this; },
+    fire(t, e = {}){ (this._ev?.[t] || []).slice().forEach(f => f.call(this, e)); return this; }
+  };
+
+  /* layer ordering among our own GL layers; everything below the style's labels unless z >= 500 */
+  function labelLayer(){ const ls = mb.getStyle()?.layers || []; return ls.find(l => l.type === 'symbol')?.id; }
+  function beforeFor(z){
+    const next = GL.order.filter(o => o.z > z && mb.getLayer(o.id)).sort((a, b) => a.z - b.z)[0];
+    if (next) return next.id;
+    return z < Z_LABELS ? labelLayer() : undefined;
+  }
+  function addGLLayer(spec, z){ if (mb.getLayer(spec.id)) return; mb.addLayer(spec, beforeFor(z)); GL.order.push({ id:spec.id, z }); }
+  const paneZ = pane => pane ? (Number(PANES[pane]?.style.zIndex) || 400) : null;
+  const PANES = {};
+
+  /* ----- batched vector overlays: one GeoJSON source per batch, data-driven style ----- */
+  class Batch {
+    constructor(id, z, kind){ this.id = id; this.z = z; this.kind = kind; this.items = new Map(); this.dash = new Map(); this.dirty = false; GL.items.add(this); }
+    set(o){ this.items.set(o._id, o); this.touch(); }
+    del(o){ if (this.items.delete(o._id)) this.touch(); }
+    touch(){ if (!this.dirty){ this.dirty = true; requestAnimationFrame(() => this.flush()); } }
+    layerIds(){ const base = this.kind === 'line' ? [this.id+'-l'] : [this.id+'-f', this.id+'-fl']; return base.concat([...this.dash.values()]).filter(id => mb.getLayer(id)); }
+    attach(){
+      if (!mb.getSource(this.id)) mb.addSource(this.id, { type:'geojson', data:{ type:'FeatureCollection', features:[] }, tolerance:.2 });
+      const line = id => ({ id, type:'line', source:this.id, layout:{ 'line-cap':'round', 'line-join':'round' },
+        paint:{ 'line-color':['get','c'], 'line-width':['get','w'], 'line-opacity':['get','o'] } });
+      if (this.kind === 'line') addGLLayer({ ...line(this.id+'-l'), filter:['==', ['get','dk'], ''] }, this.z);
+      else {
+        addGLLayer({ id:this.id+'-f', type:'fill', source:this.id, paint:{ 'fill-color':['get','fc'], 'fill-opacity':['get','fo'] } }, this.z);
+        addGLLayer({ ...line(this.id+'-fl'), filter:['>', ['get','w'], 0] }, this.z);
+      }
+      const keys = [...this.dash.keys()]; this.dash.clear(); keys.forEach(k => this.addDash(k));
+      this.dirty = false; this.flush();
+    }
+    addDash(k){
+      if (this.dash.has(k)) return;
+      const [d, w] = k.split('|'), id = this.id+'-d'+(++seq);
+      this.dash.set(k, id);
+      if (!GL.ready || !mb.getSource(this.id)) return;
+      addGLLayer({ id, type:'line', source:this.id, filter:['==', ['get','dk'], k], layout:{ 'line-cap':'butt', 'line-join':'round' },
+        paint:{ 'line-color':['get','c'], 'line-width':['get','w'], 'line-opacity':['get','o'], 'line-dasharray':d.split(/[ ,]+/).map(Number).map(v => Math.max(.1, v / Math.max(1, +w))) } }, this.z);
+    }
+    flush(){
+      this.dirty = false;
+      if (!GL.ready) return;
+      if (!mb.getSource(this.id)) return this.attach();      // first use after the style loaded
+      const fs = [];
+      for (const o of this.items.values()){ const f = o._feature(); if (!f) continue; if (f.properties.dk && !this.dash.has(f.properties.dk)) this.addDash(f.properties.dk); fs.push(f); }
+      mb.getSource(this.id).setData({ type:'FeatureCollection', features:fs });
+    }
+  }
+  const BATCH = {};
+  const batchFor = (kind, pane) => {
+    const key = kind + ':' + (pane || '');
+    return BATCH[key] || (BATCH[key] = new Batch('gp-'+kind+'-'+(pane || 'base'), paneZ(pane) ?? (kind === 'line' ? 400 : 380), kind));
+  };
+
+  /* ----- base layer object ----- */
+  class Layer {
+    constructor(){ this._id = 'o'+(++seq); this._map = null; this._groups = new Set(); }
+    addTo(t){ t.addLayer(this); return this; }
+    remove(){ if (this._map) this._map.removeLayer(this); return this; }
+    bindPopup(c, o){ this._popup = { c, o }; return this; }
+    _openPopup(at){ if (!this._popup) return; const c = typeof this._popup.c === 'function' ? this._popup.c(this) : this._popup.c; shim.openPopup(c, at, this._popup.o); }
+  }
+  Object.assign(Layer.prototype, Evented);
+
+  const lineCoords = ll => {
+    if (!ll || !ll.length) return null;
+    if (isPt(ll[0])) return ll.length > 1 ? { type:'LineString', coordinates:ll.map(lnglat) } : null;
+    const parts = ll.filter(p => p && p.length > 1).map(p => p.map(lnglat));
+    return parts.length ? { type:'MultiLineString', coordinates:parts } : null;
+  };
+  class Polyline extends Layer {
+    constructor(ll, o = {}){ super(); this._ll = ll; this.options = o; }
+    _batch(){ return batchFor('line', this.options.renderer?.pane || this.options.pane); }
+    _feature(){
+      const g = lineCoords(this._ll); if (!g) return null;
+      const o = this.options, w = o.weight ?? 3;
+      return { type:'Feature', geometry:g, properties:{ id:this._id, c:o.color || '#3388ff', w, o:o.opacity ?? 1, dk:o.dashArray ? o.dashArray+'|'+w : '', ia:o.interactive === false ? 0 : 1 } };
+    }
+    _add(m){ this._map = m; GL.objects.set(this._id, this); this._batch().set(this); }
+    _rm(){ GL.objects.delete(this._id); this._batch().del(this); this._map = null; }
+    setLatLngs(ll){ this._ll = ll; if (this._map) this._batch().touch(); return this; }
+    addLatLng(p){ (this._ll = this._ll || []).push(p); if (this._map) this._batch().touch(); return this; }
+    getLatLngs(){ return this._ll; }
+    getBounds(){ return new Bounds(this._ll); }
+  }
+  class Polygon extends Polyline {
+    _batch(){ return batchFor('fill', this.options.pane); }
+    _feature(){
+      const polys = isPt(this._ll[0]) ? [[this._ll]] : isPt(this._ll[0][0]) ? [this._ll] : this._ll;
+      const o = this.options, close = r => { const c = r.map(lnglat); if (c.length && (c[0][0] !== c[c.length-1][0] || c[0][1] !== c[c.length-1][1])) c.push(c[0]); return c; };
+      return { type:'Feature', geometry:{ type:'MultiPolygon', coordinates:polys.map(p => p.map(close)) },
+        properties:{ id:this._id, fc:o.fillColor || o.color || '#3388ff', fo:o.fillOpacity ?? .2, c:o.color || '#3388ff', w:o.stroke === false ? 0 : (o.weight ?? 2), o:o.opacity ?? 1, ia:o.interactive === false ? 0 : 1 } };
+    }
+  }
+  class Circle extends Polygon {
+    constructor(c, o = {}){ super([], o); this._c = toLL(c); this._r = o.radius || 10; }
+    setLatLng(c){ this._c = toLL(c); if (this._map) this._batch().touch(); return this; }
+    setRadius(r){ this._r = r; if (this._map) this._batch().touch(); return this; }
+    _feature(){
+      const pts = [], c = this._c, dLat = this._r / 111320, dLng = dLat / Math.cos(c.lat * Math.PI / 180);
+      for (let i = 0; i <= 40; i++){ const a = i / 40 * 2 * Math.PI; pts.push([c.lat + dLat * Math.sin(a), c.lng + dLng * Math.cos(a)]); }
+      this._ll = pts; return super._feature();
+    }
+  }
+
+  /* ----- raster tile overlays (radar, trails, traffic tiles) ----- */
+  class TileLayer extends Layer {
+    constructor(url, o = {}){ super(); this.url = url; this.options = o; this.z = paneZ(o.pane) ?? 200; this.gid = 'gp-t'+(++seq); }
+    _tiles(){
+      const o = this.options, subs = o.subdomains ? String(o.subdomains).split('') : ['a','b','c'];
+      let u = this.url.replace('{r}', '');
+      u = u.replace(/\{(\w+)\}/g, (m, k) => ['x','y','z','s'].includes(k) ? m : (typeof o[k] === 'function' ? o[k]() : o[k] ?? ''));
+      return u.includes('{s}') ? subs.map(s => u.replace('{s}', s)) : [u];
+    }
+    attach(){
+      if (!mb.getSource(this.gid)) mb.addSource(this.gid, { type:'raster', tiles:this._tiles(), tileSize:256, maxzoom:this.options.maxNativeZoom ?? Math.min(19, this.options.maxZoom ?? 19), attribution:this.options.attribution || '' });
+      addGLLayer({ id:this.gid, type:'raster', source:this.gid, paint:{ 'raster-opacity':this.options.opacity ?? 1, 'raster-fade-duration':0 } }, this.z);
+    }
+    _add(m){ this._map = m; GL.items.add(this); if (GL.ready) this.attach(); }
+    _rm(){ GL.items.delete(this); if (GL.ready){ if (mb.getLayer(this.gid)) mb.removeLayer(this.gid); if (mb.getSource(this.gid)) mb.removeSource(this.gid); } this._map = null; }
+    setOpacity(v){ this.options.opacity = v; if (GL.ready && mb.getLayer(this.gid)) mb.setPaintProperty(this.gid, 'raster-opacity', v); return this; }
+    redraw(){ if (GL.ready && mb.getSource(this.gid)?.setTiles) mb.getSource(this.gid).setTiles(this._tiles()); return this; }
+  }
+
+  /* ----- custom GL layers (Mapbox traffic, 3D buildings) ----- */
+  class GLLayer extends Layer {
+    constructor(build, z){ super(); this.build = build; this.z = z; }
+    attach(){ const sp = this.build(mb); if (!sp) return; this.ids = []; for (const [srcId, src] of sp.sources || []) if (!mb.getSource(srcId)) mb.addSource(srcId, src); for (const l of sp.layers){ addGLLayer(l, this.z); this.ids.push(l.id); } }
+    _add(m){ this._map = m; GL.items.add(this); if (GL.ready) this.attach(); }
+    _rm(){ GL.items.delete(this); if (GL.ready) (this.ids || []).forEach(id => mb.getLayer(id) && mb.removeLayer(id)); this._map = null; }
+  }
+
+  /* ----- markers ----- */
+  class Marker extends Layer {
+    constructor(ll, o = {}){
+      super(); this.options = o; this._ll = toLL(ll);
+      const ic = o.icon?.options || { className:'', html:'', iconSize:[24,24] };
+      const el = document.createElement('div');
+      el.className = 'gp-icon ' + (ic.className || '');
+      el.innerHTML = ic.html || '';
+      const [w, h] = ic.iconSize || [0, 0], [ax, ay] = ic.iconAnchor || [w / 2, h / 2];
+      el.style.width = w+'px'; el.style.height = h+'px';
+      if (o.interactive === false) el.style.pointerEvents = 'none';
+      this._el = el;
+      this._m = new mapboxgl.Marker({ element:el, anchor:'top-left', offset:[-ax, -ay], draggable:!!o.draggable,
+        ...(o.alignMap ? { pitchAlignment:'map', rotationAlignment:'map' } : {}) });   // alignMap: lies flat on the road and turns with the map
+      this._m.setLngLat(lnglat(this._ll));
+      el.addEventListener('click', ev => { ev.stopPropagation(); this.fire('click', { latlng:this.getLatLng(), originalEvent:ev }); this._openPopup(this.getLatLng()); });
+      if (o.draggable){ this._m.on('drag', () => this.fire('drag')); this._m.on('dragend', () => this.fire('dragend')); }
+    }
+    _add(m){ this._map = m; this._m.addTo(mb); const wrap = this._m.getElement(); wrap.style.zIndex = String(10 + (this.options.zIndexOffset || 0)); }
+    _rm(){ this._m.remove(); this._map = null; }
+    setLatLng(ll){ this._ll = toLL(ll); this._m.setLngLat(lnglat(this._ll)); return this; }
+    getLatLng(){ const p = this._m.getLngLat(); return new LatLng(p.lat, p.lng); }
+    getElement(){ return this._el; }
+  }
+
+  /* ----- groups ----- */
+  class LayerGroup extends Layer {
+    constructor(ls){ super(); this._layers = new Set(); (ls || []).forEach(l => this.addLayer(l)); }
+    addLayer(l){ this._layers.add(l); l._groups.add(this); if (this._map) this._map.addLayer(l); return this; }
+    removeLayer(l){ if (this._layers.delete(l)){ l._groups.delete(this); if (this._map) this._map.removeLayer(l); } return this; }
+    clearLayers(){ [...this._layers].forEach(l => this.removeLayer(l)); return this; }
+    getLayers(){ return [...this._layers]; }
+    _add(m){ this._map = m; this._layers.forEach(l => m.addLayer(l)); }
+    _rm(){ const m = this._map; this._map = null; this._layers.forEach(l => m.removeLayer(l)); }
+  }
+
+  /* ----- popups ----- */
+  class Popup {
+    constructor(o = {}){ this.o = o; }
+    setLatLng(ll){ this.ll = toLL(ll); return this; }
+    setContent(c){ this.c = c; return this; }
+    openOn(m){ m.openPopup(this.c, this.ll, this.o); return this; }
+  }
+
+  /* ----- the map ----- */
+  class MapShim {
+    constructor(id, o = {}){
+      shim = this; this._layers = new Set(); this._ev = {}; this._style = o.style;
+      mb = new mapboxgl.Map({ container:id, style:o.style, center:o.center ? lnglat(o.center) : [-74.006, 40.7128], zoom:(o.zoom ?? 13) - 1,
+        attributionControl:true, logoPosition:'bottom-left', pitchWithRotate:true, cooperativeGestures:false, fadeDuration:150, projection:'mercator' });
+      this._mb = mb;
+      this.attributionControl = { getContainer:() => mb.getContainer().querySelector('.mapboxgl-ctrl-attrib-inner') };
+      mb.on('style.load', () => {
+        GL.ready = true; GL.order = [];
+        const items = [...GL.items].sort((a, b) => a.z - b.z);
+        items.forEach(it => { try{ it.attach(); }catch(e){ console.warn('layer', e); } });
+        this.fire('styleload');
+      });
+      const toEv = e => ({ latlng:new LatLng(e.lngLat.lat, e.lngLat.lng), originalEvent:e.originalEvent, _stopped:false });
+      mb.on('click', e => {
+        if (e.originalEvent?.target?.closest?.('.mapboxgl-marker,.mapboxgl-popup')) return;
+        const ev = toEv(e);
+        const ids = Object.values(BATCH).flatMap(b => b.layerIds());
+        if (ids.length){
+          const p = e.point, hits = mb.queryRenderedFeatures([[p.x - 10, p.y - 10], [p.x + 10, p.y + 10]], { layers:ids });
+          const hit = hits.map(f => GL.objects.get(f.properties.id)).find(o => o && o.options.interactive !== false && (o._ev?.click?.length || o._popup));
+          if (hit){ hit.fire('click', ev); if (hit._popup) hit._openPopup(ev.latlng); if (ev._stopped || hit._popup) return; }
+        }
+        this.fire('click', ev);
+      });
+      mb.on('contextmenu', e => this.fire('contextmenu', toEv(e)));
+      ['dragstart', 'rotatestart', 'pitchstart'].forEach(t => mb.on(t, e => { if (e.originalEvent) this.fire('dragstart', e); }));
+      mb.on('zoomstart', e => this.fire('zoomstart', e));
+      mb.on('moveend', e => this.fire('moveend', e));
+      mb.on('move', e => this.fire('move', e));
+    }
+    addLayer(l){ if (l._map === this) return this; this._layers.add(l); l._add(this); return this; }
+    removeLayer(l){ if (l._map !== this) return this; this._layers.delete(l); l._rm(); return this; }
+    hasLayer(l){ return l._map === this; }
+    setView(c, z, o = {}){
+      const opts = { center:lnglat(c), zoom:(z ?? this.getZoom()) - 1 };
+      if (o.animate === false || !GL.ready) mb.jumpTo(opts); else mb.easeTo({ ...opts, duration:(o.duration ?? .5) * 1000 });
+      return this;
+    }
+    camera(o){
+      mb.easeTo({ center:lnglat(o.center), zoom:o.zoom - 1, bearing:o.bearing ?? mb.getBearing(), pitch:o.pitch ?? mb.getPitch(),
+        padding:o.padding, duration:o.duration ?? 1000, easing:t => t, essential:true });
+    }
+    panTo(c){ mb.easeTo({ center:lnglat(c), duration:400 }); return this; }
+    fitBounds(b, o = {}){
+      const bb = b instanceof Bounds ? b : new Bounds(b); if (!bb.isValid()) return this;
+      const [tlx, tly] = o.paddingTopLeft || o.padding || [20, 20], [brx, bry] = o.paddingBottomRight || o.padding || [20, 20];
+      const sz = this.getSize(), pad = { top:Math.min(tly, sz.y * .45), left:Math.min(tlx, sz.x * .4), bottom:Math.min(bry, sz.y * .45), right:Math.min(brx, sz.x * .4) };
+      mb.fitBounds(bb.toMB(), { padding:pad, maxZoom:(o.maxZoom ?? 18) - 1, bearing:0, pitch:0, duration:700 });
+      return this;
+    }
+    getBounds(){ const b = mb.getBounds(); return new Bounds([[b.getSouth(), b.getWest()], [b.getNorth(), b.getEast()]]); }
+    getCenter(){ const c = mb.getCenter(); return new LatLng(c.lat, c.lng); }
+    getZoom(){ return mb.getZoom() + 1; }
+    getBearing(){ return mb.getBearing(); }
+    getSize(){ const c = mb.getContainer(); return { x:c.clientWidth, y:c.clientHeight }; }
+    getContainer(){ return mb.getContainer(); }
+    latLngToContainerPoint(ll){ const p = mb.project(lnglat(ll)); return { x:p.x, y:p.y }; }
+    containerPointToLatLng(p){ const q = mb.unproject(Array.isArray(p) ? p : [p.x, p.y]); return new LatLng(q.lat, q.lng); }
+    mouseEventToLatLng(e){ const r = mb.getContainer().getBoundingClientRect(); return this.containerPointToLatLng([e.clientX - r.left, e.clientY - r.top]); }
+    invalidateSize(){ mb.resize(); return this; }
+    createPane(name){ return PANES[name] = PANES[name] || { style:{} }; }
+    getPane(name){ return this.createPane(name); }
+    openPopup(html, at, o = {}){
+      this.closePopup();
+      const p = new mapboxgl.Popup({ maxWidth:(o.maxWidth || 300)+'px', className:'gp-pop', focusAfterOpen:false, offset:12 })
+        .setLngLat(lnglat(at)).setHTML(html).addTo(mb);
+      GL.popup = p;
+      p.on('close', () => { if (GL.popup === p) GL.popup = null; this.fire('popupclose', { popup:p }); });
+      this.fire('popupopen', { popup:{ getElement:() => p.getElement() } });
+    }
+    closePopup(){ if (GL.popup){ const p = GL.popup; GL.popup = null; p.remove(); } return this; }
+    setStyle(url){ if (this._style === url) return; this._style = url; GL.ready = false; mb.setStyle(url); }
+  }
+  Object.assign(MapShim.prototype, Evented);
+
+  const DivIcon = function(o){ this.options = o; };
+  return {
+    map:(id, o) => new MapShim(id, o),
+    marker:(ll, o) => new Marker(ll, o),
+    divIcon:o => new DivIcon(o),
+    polyline:(ll, o) => new Polyline(ll, o),
+    polygon:(ll, o) => new Polygon(ll, o),
+    circle:(c, o) => new Circle(c, o),
+    tileLayer:(u, o) => new TileLayer(u, o),
+    glLayer:(build, z) => new GLLayer(build, z),
+    layerGroup:ls => new LayerGroup(ls),
+    popup:o => new Popup(o),
+    latLngBounds:pts => new Bounds(pts),
+    latLng:(a, b) => new LatLng(a, b),
+    canvas:o => ({ pane:o?.pane || 'trails' }),
+    DomEvent:{ stop:e => { if (e) e._stopped = true; } }
+  };
+})();
+
+const MB_STYLES = {
+  street:dark => dark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/navigation-day-v1',
+  topo:() => 'mapbox://styles/mapbox/outdoors-v12',
+  satellite:() => 'mapbox://styles/mapbox/satellite-streets-v12'
+};
+const startDark = settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches) || (settings.theme === 'sun' && (new Date().getHours() < 7 || new Date().getHours() >= 18));
+const lastView = store.get('lastView', null);
+const map = L.map('map', { style:(MB_STYLES[settings.base] || MB_STYLES.street)(startDark), center:lastView ? [lastView[0], lastView[1]] : [39.5, -98.35], zoom:lastView ? lastView[2] : 5 });
+map.on('styleload', () => { if (S.nav) drawNavRoute(); });
+map.on('moveend', () => { const c = map.getCenter(); store.set('lastView', [+c.lat.toFixed(5), +c.lng.toFixed(5), +map.getZoom().toFixed(1)]); });
 const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 function applyTheme(){
   const th = settings.theme === 'sun' ? ((sunDark = isDark()) ? 'dark' : 'light') : settings.theme;
   if (th === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = th;
   setBase();
-  map.getContainer().classList.toggle('night', isDark() && baseKey === 'street');
   applyOverlays();
   if (S.nav) drawNavRoute(); else if (S.routes.length) drawRoutes();
 }
@@ -713,23 +1089,23 @@ const carIcon = L.divIcon({ className:'car', iconSize:[44,44], iconAnchor:[22,22
 let carMarker = null, accCircle = null;
 function drawCar(){
   if (!carMarker){
-    carMarker = L.marker(S.pos, { icon:carIcon, interactive:false, zIndexOffset:1000 }).addTo(map);
+    carMarker = L.marker(S.pos, { icon:carIcon, interactive:false, zIndexOffset:1000, alignMap:true }).addTo(map);
     accCircle = L.circle(S.pos, { radius:S.acc || 10, stroke:false, fillColor:css('--route'), fillOpacity:.1, interactive:false }).addTo(map);
   }
   carMarker.setLatLng(S.pos); accCircle.setLatLng(S.pos).setRadius(Math.min(S.acc || 10, 500));
   rotateCar();
 }
 /* ---------- map rotation, car arrow and compass: one rAF loop, frame-rate independent ---------- */
-// Heading-up: the map turns so your direction of travel points up (needs the leaflet-rotate plugin).
-// Each frame eases toward the newest target: map ~350 ms, compass-driven arrow ~45 ms, GPS arrow ~300 ms.
-const canRotate = typeof map.setBearing === 'function';
+// Heading-up: Mapbox turns the map so your direction of travel points up (see followCam).
+// The car arrow eases toward the newest heading each frame: compass ~45 ms, GPS ~300 ms.
+const canRotate = true;
 let carRot = 0, animRun = false, animLast = 0, txtLast = 0;
 S.mapHdg = 0;
 const wrap = d => ((d % 360) + 540) % 360 - 180;            // shortest signed angle
 const compassDriving = () => CMP.on && CMP.raw != null && S.speed < CMP_SPEED;
-const bearingNow = () => canRotate ? (map.getBearing() || 0) : 0;
+const bearingNow = () => -map.getBearing();          // screen turn of the map (negative of Mapbox bearing)
 const headingUp = () => canRotate && settings.orient === 'heading';
-function northUp(){ if (canRotate) map.setBearing(0); }
+function northUp(){}                                   // fitBounds already resets bearing and pitch
 function kickAnim(){ if (!animRun){ animRun = true; animLast = performance.now(); requestAnimationFrame(animFrame); } }
 function rotateCar(){
   const root = carMarker?.getElement();
@@ -746,21 +1122,12 @@ function mapHeading(){
 function animFrame(t){
   const dt = Math.min(.1, Math.max(0, (t - animLast) / 1000)); animLast = t;
   let busy = false;
-  if (canRotate){
-    let tgt = null;
-    if (settings.orient !== 'heading') tgt = 0;
-    else if (S.follow && S.pos && (S.nav || !S.dest)){ S.mapHdg = mapHeading(); tgt = -S.mapHdg; }
-    if (tgt !== null){
-      const cur = bearingNow(), d = wrap(tgt - cur);
-      if (Math.abs(d) > .15){ map.setBearing(cur + (Math.abs(d) < .6 ? d : d * (1 - Math.exp(-dt / .35)))); busy = true; }
-    }
-  }
   const b = bearingNow();
   const carEl = carMarker?.getElement()?.querySelector('.car-rot');
   if (carEl){
     const d = wrap(S.heading - carRot);
     if (Math.abs(d) > .05){ carRot += Math.abs(d) < .3 ? d : d * (1 - Math.exp(-dt / (compassDriving() ? .045 : .3))); busy = true; }
-    carEl.style.transform = `rotate(${(carRot + b).toFixed(2)}deg)`;   // markers stay upright, so add the map's turn
+    carEl.style.transform = `rotate(${carRot.toFixed(2)}deg)`;          // the car marker lies on the map, so world heading is right
   }
   roseEl.style.transform = `rotate(${b.toFixed(2)}deg)`;            // the red needle always points at north on screen
   if (t - txtLast > 150){
@@ -768,7 +1135,7 @@ function animFrame(t){
     const h = ((headingUp() ? S.mapHdg : (CMP.raw ?? 0)) % 360 + 360) % 360;
     cmpTxt.textContent = headingUp() ? CARD16[Math.round(h / 22.5) % 16] : CMP.on && CMP.raw != null ? CARD16[Math.round(h / 22.5) % 16]+' '+Math.round(h)+'°' : 'N up';
   }
-  if (busy || CMP.on || headingUp()) requestAnimationFrame(animFrame); else animRun = false;
+  if (busy || CMP.on) requestAnimationFrame(animFrame); else animRun = false;
 }
 function renderOrient(){
   const b = $('#btnCompass');
@@ -793,6 +1160,7 @@ function onOrient(e){
   CMP.raw = CMP.raw == null ? h : CMP.raw + wrap(h - CMP.raw);
   if (S.speed < CMP_SPEED) S.heading = (CMP.raw % 360 + 360) % 360;
   kickAnim();
+  if (compassDriving() && S.follow && headingUp() && Date.now() - (S.camAt || 0) > 250) followCam(300);
 }
 async function compassOn(){
   try{
@@ -814,10 +1182,9 @@ function compassOff(){
   if (!modal.hidden && mSheet.dataset.view === 'layers') renderLayers();
 }
 $('#btnCompass').onclick = () => {
-  if (!canRotate){ toast('Map rotation didn’t load. Check your connection and reload.'); return; }
   settings.orient = headingUp() ? 'north' : 'heading'; saveSettings();
-  if (headingUp() && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; followCam(); }
-  renderOrient(); kickAnim();
+  if (headingUp() && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; }
+  followCam(500); renderOrient(); kickAnim();
   toast(headingUp() ? 'Map turns with you' : 'North up', 1500);
 };
 function onPosition(c){
@@ -835,7 +1202,7 @@ function onPosition(c){
   if (PLACE) plSub();
   checkWx(); refreshConditions();
   if (S.nav) navTick();
-  if (!S.firstFix){ S.firstFix = true; if (!S.nav && !S.dest) map.setView(ll, 16); }
+  if (!S.firstFix){ S.firstFix = true; if (!S.nav && !S.dest) followCam(900); kickAnim(); }
   else if (S.follow && (S.nav || !S.dest)) followCam();
 }
 function startGPS(){
@@ -844,33 +1211,35 @@ function startGPS(){
     err => toast(err.code === 1 ? 'Location is blocked. Allow it for this site (the page must be on HTTPS).' : 'Waiting for a GPS signal…', 4500),
     { enableHighAccuracy:true, maximumAge:1000, timeout:20000 });
 }
-function followCam(){
+// One camera move per GPS fix, eased linearly over about a second, so the map glides continuously.
+function followCam(dur){
   if (!S.pos) return;
-  const z = S.nav ? (S.speed > 24 ? 15 : S.speed > 12 ? 16 : 17) + (is3D ? .5 : 0) : Math.max(map.getZoom(), 15);
-  const off = carOffsetPx();
-  let c = S.pos;
-  if (off){   // put the car low on screen: center the map ahead of it, along the way the map faces
-    const mpp = 156543.03392 * Math.cos(rad(S.pos[0])) / 2 ** z;
-    c = destPoint(S.pos, headingUp() ? S.mapHdg : 0, off * mpp);
-  }
-  map.setView(c, z, { animate:true, duration:.6 });
+  S.camAt = Date.now();
+  is3D = want3D() && S.follow;
+  const turning = headingUp() && (S.nav || !S.dest);
+  if (turning) S.mapHdg = mapHeading();
+  const H = map.getSize().y, navH = S.nav ? $('#navbar').offsetHeight : 0;
+  const z = S.nav ? (S.speed > 24 ? 15.2 : S.speed > 12 ? 16 : 16.8) + (is3D ? .4 : 0) : Math.max(map.getZoom(), 15.5);
+  map.camera({ center:S.pos, zoom:z, bearing:turning ? S.mapHdg : 0, pitch:is3D ? 60 : 0,
+    padding:{ top:S.nav ? Math.round(H * (is3D ? .48 : .34)) : 0, bottom:navH, left:0, right:0 }, duration:dur ?? 1000 });
 }
 function destPoint(p, brg, m){
   const d = m / R_E, b = rad(brg), la = rad(p[0]), lo = rad(p[1]);
   const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(b));
   return [deg(la2), deg(lo + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2)))];
 }
-map.on('dragstart', () => { S.follow = false; $('#btnRecenter').hidden = !S.pos; apply3D(); });
-$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; apply3D(); followCam(); kickAnim(); };
+map.on('dragstart', () => { S.follow = false; is3D = false; $('#btnRecenter').hidden = !S.pos; });
+map.on('move', kickAnim);
+$('#btnRecenter').onclick = () => { S.follow = true; $('#btnRecenter').hidden = true; followCam(700); kickAnim(); };
 
 /* ---------- speed & limit ---------- */
 function updateSpeedo(){
   const v = speedDisp(S.speed);
   $('#spd').textContent = v; $('#spdU').textContent = imperial() ? 'mph' : 'km/h';
   const lim = $('#limit');
-  if (S.limitKmh == null){ lim.hidden = true; $('#speedo').classList.remove('over'); renderSpeedRing(v, 0, false); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
+  if (S.limitKmh == null){ lim.hidden = !S.pos; lim.classList.add('unk'); lim.classList.remove('est', 'over'); lim.classList.toggle('metric', !imperial()); $('#limitVal').textContent = '–'; lim.title = 'Looking up the speed limit'; $('#speedo').classList.remove('over'); renderSpeedRing(v, 0, false); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
   const lv = imperial() ? Math.round(S.limitKmh/1.609344/5)*5 : Math.round(S.limitKmh);
-  lim.hidden = false; lim.classList.toggle('metric', !imperial()); lim.classList.toggle('est', !!S.limitEst);
+  lim.hidden = false; lim.classList.remove('unk'); lim.classList.toggle('metric', !imperial()); lim.classList.toggle('est', !!S.limitEst);
   lim.title = S.limitEst ? 'Estimated from the road type. No posted limit is mapped here.' : 'Posted speed limit';
   $('#limitVal').textContent = lv;
   const over = v > lv + (imperial() ? 4 : 6);
@@ -928,7 +1297,7 @@ async function maybeSpeedLimit(){
   const at = S.pos, hdg = S.heading, moving = S.speed > 2;
   const ql = `[out:json][timeout:10];way(around:30,${at[0].toFixed(6)},${at[1].toFixed(6)})[highway~"${ROAD_RE}"];out geom 12;`;
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    const r = await opFetch({ method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
     const j = await r.json();
     let cur = null;
     if (n){ const st = n.route.steps[n.k || 0]; cur = st && (st.name || st.ref); }
@@ -969,11 +1338,22 @@ async function search(text){
   const vb = [c[1]-.6, c[0]+.6, c[1]+.6, c[0]-.6].map(n => n.toFixed(4)).join(',');
   sheetHTML('<div class="grab"></div><p class="hint">Searching…</p>');
   try{
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&q=${encodeURIComponent(text)}&viewbox=${vb}`,
-      { signal:searchAbort.signal, headers:{ 'Accept-Language':navigator.language || 'en' } });
-    if (!r.ok) throw new Error('Search service returned '+r.status+'. Try again in a moment.');
-    const j = await r.json();
-    S.list = j.map(x => ({ name: x.name || x.display_name.split(',')[0], addr: x.display_name, lat:+x.lat, lng:+x.lon }));
+    S.list = null;
+    try{
+      const r = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&proximity=${c[1].toFixed(4)},${c[0].toFixed(4)}&limit=8&language=${(navigator.language || 'en').slice(0, 2)}&access_token=${encodeURIComponent(MB_TOKEN)}`, { signal:searchAbort.signal });
+      if (r.ok){
+        const j = await r.json();
+        S.list = (j.features || []).map(f => ({ name:f.properties.name || f.properties.full_address, addr:f.properties.full_address || f.properties.place_formatted || '',
+          sub:f.properties.place_formatted || '', lat:f.geometry.coordinates[1], lng:f.geometry.coordinates[0] }));
+      }
+    }catch(e){ if (e.name === 'AbortError') throw e; }
+    if (!S.list || !S.list.length){
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&q=${encodeURIComponent(text)}&viewbox=${vb}`,
+        { signal:searchAbort.signal, headers:{ 'Accept-Language':navigator.language || 'en' } });
+      if (!r.ok) throw new Error('Search service returned '+r.status+'. Try again in a moment.');
+      const j = await r.json();
+      S.list = j.map(x => ({ name: x.name || x.display_name.split(',')[0], addr: x.display_name, lat:+x.lat, lng:+x.lon }));
+    }
     if (S.pos) S.list.sort((a, b) => dist(S.pos, [a.lat, a.lng]) - dist(S.pos, [b.lat, b.lng]));
     sheetHTML('<div class="grab"></div>' + (S.list.length
       ? `<ul class="list">${S.list.map((p, i) => row(p, 'res', i, ico.pin)).join('')}</ul>`
@@ -1063,7 +1443,7 @@ async function previewPlace(p){
   if (S.nav) endNav(true);
   cancelPlace(); catLayer.clearLayers();
   if (S.stop && !(S.dest && S.dest.lat === p.lat && S.dest.lng === p.lng)){ S.stop = null; drawStop(); }
-  S.dest = { ...p, ll:[p.lat, p.lng] }; S.routes = []; S.routeIdx = 0; S.follow = false;
+  S.dest = { ...p, ll:[p.lat, p.lng] }; S.routes = []; S.routeIdx = 0; S.follow = false; layoutView();
   q.value = p.name; $('#clearQ').hidden = false; q.blur();
   if (destMarker) destMarker.setLatLng(S.dest.ll); else destMarker = L.marker(S.dest.ll, { icon:destIcon, interactive:false }).addTo(map);
   routeLayer.clearLayers(); renderPreview('loading');
@@ -1264,7 +1644,7 @@ function speakGuidance(k, toNext){
   if (!sp.far && toNext <= far + 80 && toNext > far - 250 && legLen > far*1.3){ sp.far = 1; say(`In ${farWord}, ${lc}`); }
   else if (!sp.near && toNext <= near + 40 && toNext > nowAt + 80 && legLen > near*1.2){ sp.near = 1; say(`In ${nearWord}, ${lc}`); }
   else if (!sp.now && toNext <= nowAt){
-    sp.now = 1; sp.far = sp.near = 1;
+    sp.now = 1; sp.far = sp.near = 1; navigator.vibrate?.([60, 60, 60]);
     const nxt = R.steps[k+1];
     const then = nxt && (R.stepStart[k+1] - R.stepStart[k]) < 200 ? ', then '+instr(nxt).replace(/^./, c => c.toLowerCase()) : '';
     say(step.maneuver.type === 'arrive' ? (step.waypoint ? 'You have reached your stop' : 'You have arrived') : text + then);
@@ -1400,9 +1780,9 @@ function renderLayers(){
     <div class="bases">${[['street','Street'],['topo','Terrain'],['satellite','Satellite']].map(([k, l]) =>
       `<button class="base${(BASES[settings.base] ? settings.base : 'street') === k ? ' on' : ''}" data-base="${k}"><i class="th-${k}"></i>${l}</button>`).join('')}</div>
     <h3 class="label">On the map</h3>
-    ${tg('ovTraffic', 'Live traffic', trafficKey() ? 'Roads colored by current speed, from TomTom. Refreshes every 2 minutes.' : 'Roads colored by current speed. Needs a free TomTom key.')}
-    ${settings.ovTraffic ? `<div class="subs">${tg('trafficInc', 'Incidents', 'Crashes, closures and roadwork icons')}
-      <div class="keyrow"><label for="ttKey">TomTom API key</label>
+    ${tg('ovTraffic', 'Live traffic', 'Slow and stopped roads colored orange to dark red, from Mapbox')}
+    ${settings.ovTraffic ? `<div class="subs">${tg('trafficInc', 'Incident icons', 'Crashes, closures and roadwork from TomTom. Needs the optional key below.')}
+      <div class="keyrow"><label for="ttKey">TomTom API key (optional)</label>
         <div class="keyin"><input id="ttKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key" value="${esc(trafficKey())}"><button class="btn" data-ttsave>Save</button></div>
         <small>Get one free at developer.tomtom.com (sign up, then copy the key from your dashboard). It stays on this device.</small></div></div>` : ''}
     ${tg('ovRadar', 'Weather radar', 'NEXRAD reflectivity for the US, updated every 5 minutes')}
@@ -1421,7 +1801,7 @@ function renderLayers(){
       : `<button class="tg" data-tool="park"><span class="row-txt"><b>Save parking spot</b><small>Drop a P marker so you can find your car</small></span><span class="park-badge">P</span></button>`}
     <button class="tg" data-tool="trips"><span class="row-txt"><b>Trip history</b><small>Your recent drives and weekly totals</small></span><span class="chev">›</span></button>
     <h3 class="label">Routing</h3>
-    <button class="tg" data-tool="opts"><span class="row-txt"><b>Route options</b><small>${[trafficKey() && settings.trafficRouting ? 'Live traffic' : 'No traffic', settings.avoidTolls && 'no tolls', settings.avoidHighways && 'no highways', settings.avoidFerries && 'no ferries', settings.avoidUnpaved && 'no unpaved'].filter(Boolean).join(' · ')}</small></span><span class="chev">›</span></button>
+    <button class="tg" data-tool="opts"><span class="row-txt"><b>Route options</b><small>${[settings.trafficRouting ? 'Live traffic' : 'No traffic', settings.avoidTolls && 'no tolls', settings.avoidHighways && 'no highways', settings.avoidFerries && 'no ferries', settings.avoidUnpaved && 'no unpaved'].filter(Boolean).join(' · ')}</small></span><span class="chev">›</span></button>
     <h3 class="label">Vehicle</h3>
     <div class="num-row">
       ${imperial() ? `<label>Fuel economy<span><input type="number" inputmode="decimal" step="0.1" min="0" id="nMpg" data-num="mpg" value="${settings.mpg || ''}"> mpg</span></label>
@@ -1439,8 +1819,9 @@ function renderLayers(){
     ${tg('view3d', '3D driving view', 'Tilt the map toward the horizon while you navigate')}
     ${tg('showSignals', 'Traffic lights on route', 'Show traffic signals along your route while navigating')}
     ${tg('camAlerts', 'Speed camera alerts', 'Warn before speed and red light cameras mapped on OpenStreetMap')}
+    <div class="set-row"><span>Mapbox token</span><div class="keyin"><input id="mbTok2" type="password" autocomplete="off" spellcheck="false" value="${esc(MB_TOKEN)}"><button class="btn" data-mbsave>Save</button></div></div>
     <div class="set-row"><span>Saved data</span><div class="seg"><button data-clear="places">Clear places</button><button data-clear="reports">Clear reports</button></div></div>
-    <p class="fine">Map data © OpenStreetMap contributors · terrain © OpenTopoMap (CC-BY-SA) · imagery © Esri, Maxar · routes © Waymarked Trails · traffic and traffic routing © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · public land roads and trails from USFS (Motor Vehicle Use Map) and BLM (GTLF) · search by Nominatim · routing by OSRM · trails, places and speed limits from Overpass. These are free public servers meant for light personal use.</p>`);
+    <p class="fine">Map, traffic, search and live-traffic routes © Mapbox © OpenStreetMap contributors · routes © Waymarked Trails · incidents © TomTom · radar: NWS NEXRAD via Iowa Environmental Mesonet · warnings: National Weather Service · weather: Open-Meteo · trails, places and speed limits from Overpass and OpenStreetMap · public lands from USFS and BLM</p>`);
   mSheet.dataset.view = 'layers';
   if (wasOpen) mSheet.scrollTop = keep;
 }
@@ -1450,10 +1831,11 @@ mSheet.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.rep) return addReport(b.dataset.rep);
   if ('ttsave' in b.dataset){ saveTrafficKey(); return; }
+  if ('mbsave' in b.dataset){ const v = $('#mbTok2').value.trim(); if (!/^pk\./.test(v)){ toast('A Mapbox public token starts with pk.'); return; } store.set('mbtoken', v); location.reload(); return; }
   if (b.dataset.base){ settings.base = b.dataset.base; saveSettings(); applyTheme(); renderLayers(); return; }
   if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); if (k.startsWith('src')) resetTrails();
     if (k === 'useCompass'){ settings[k] ? compassOn() : compassOff(); }
-    if (k === 'view3d') apply3D();
+    if (k === 'view3d'){ map.removeLayer(buildings3d); map.addLayer(buildings3d); apply3D(); }
     if (/^(avoid|trafficRouting)/.test(k)) S.routesStale = true;
     applyOverlays(); rerenderModal(); return; }
   if (b.dataset.tool === 'park'){ askPark(); return; }
@@ -1469,7 +1851,7 @@ mSheet.addEventListener('click', e => {
     const k = b.dataset.set; let v = b.dataset.val; if (v === 'true' || v === 'false') v = v === 'true';
     settings[k] = v; saveSettings();
     if (k === 'theme') applyTheme();
-    if (k === 'orient'){ renderOrient(); if (settings.orient === 'heading' && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; followCam(); } kickAnim(); }
+    if (k === 'orient'){ renderOrient(); if (settings.orient === 'heading' && S.pos){ S.follow = true; $('#btnRecenter').hidden = true; } followCam(500); kickAnim(); }
     if (k === 'units'){ updateSpeedo(); updateAlt(); if (S.nav && S.pos) navTick(); else if (!S.nav) S.dest ? renderPreview() : renderIdle(); }
     if (k === 'voice' && !v) speechSynthesis?.cancel?.();
     if (k === 'voice') renderMute();
@@ -1517,27 +1899,25 @@ map.on('click', e => { if (PLACE){ PLACE.m.setLatLng(e.latlng); plSub(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (PLACE) cancelPlace(); else if (!modal.hidden) closeModal(); } });
 
 /* ---------- base maps & overlays ---------- */
-map.createPane('overTiles', map._rotatePane).style.zIndex = 250; map.getPane('overTiles').style.pointerEvents = 'none';
-map.createPane('trails', map._rotatePane).style.zIndex = 390;
-const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
-const BASES = {
-  street:{ url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', o:{ maxZoom:19, attribution:TILE_ATTR } },
-  topo:{ url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', o:{ maxZoom:19, maxNativeZoom:17, subdomains:'abc',
-    attribution:TILE_ATTR+', SRTM · style &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)' } },
-  satellite:{ url:ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}', o:{ maxZoom:19, maxNativeZoom:18, attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics' } }
-};
-let baseLayer = null, baseKey = null, satLabels = null;
+map.createPane('overTiles').style.zIndex = 250; map.getPane('overTiles').style.pointerEvents = 'none';
+map.createPane('trails').style.zIndex = 390;
+const BASES = { street:1, topo:1, satellite:1 };
+let baseKey = null;
 function setBase(){
   const key = BASES[settings.base] ? settings.base : 'street';
-  if (key === baseKey) return;
-  if (baseLayer) map.removeLayer(baseLayer);
-  if (satLabels){ map.removeLayer(satLabels); satLabels = null; }
-  baseLayer = L.tileLayer(BASES[key].url, BASES[key].o).addTo(map); baseKey = key;
-  if (key === 'satellite') satLabels = L.layerGroup([
-    L.tileLayer(ESRI+'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { pane:'overTiles', maxZoom:19, maxNativeZoom:18 }),
-    L.tileLayer(ESRI+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { pane:'overTiles', maxZoom:19, maxNativeZoom:18 })
-  ]).addTo(map);
+  baseKey = key;
+  map.setStyle(MB_STYLES[key](isDark()));
 }
+/* 3D buildings, drawn from the style's own building data */
+const buildings3d = L.glLayer(mbm => {
+  if (!mbm.getSource('composite') || !settings.view3d) return null;
+  const dark = isDark() && baseKey !== 'satellite';
+  return { layers:[{ id:'gp-buildings', type:'fill-extrusion', source:'composite', 'source-layer':'building', minzoom:14.5,
+    filter:['==', ['get', 'extrude'], 'true'],
+    paint:{ 'fill-extrusion-color':dark ? '#2a3442' : '#d9dde3', 'fill-extrusion-opacity':.82,
+      'fill-extrusion-height':['interpolate', ['linear'], ['zoom'], 14.5, 0, 15.5, ['get', 'height']],
+      'fill-extrusion-base':['get', 'min_height'] } }] };
+}, 470);
 const WM = { hike:null, mtb:null };
 function wmLayer(k, on){
   if (on && !WM[k]) WM[k] = L.tileLayer(`https://tile.waymarkedtrails.org/${k === 'hike' ? 'hiking' : 'mtb'}/{z}/{x}/{y}.png`,
@@ -1548,7 +1928,7 @@ function applyOverlays(){
   wmLayer('hike', settings.ovHike); wmLayer('mtb', settings.ovMtb);
   if (settings.ovReports) reportLayer.addTo(map); else map.removeLayer(reportLayer);
   if (settings.ovOffroad){ OR.layer.addTo(map); loadTrails(); } else { map.removeLayer(OR.layer); clearTrailHL(); }
-  applyTraffic(); applyRadar(); applyWarnings(); renderLegend();
+  applyTraffic(); applyRadar(); applyWarnings(); map.addLayer(buildings3d); renderLegend();
 }
 
 /* ---------- off-road trails: OpenStreetMap + USFS Motor Vehicle Use Map + BLM GTLF ---------- */
@@ -1608,7 +1988,7 @@ async function loadOSM(pb, gen){
   const ql = `[out:json][timeout:25][bbox:${bb}];(way[highway=track];way["4wd_only"=yes];`
     + `way[highway~"^(path|bridleway)$"][motor_vehicle~${V}];way[highway~"^(path|track|unclassified)$"][atv~${V}];`
     + `way[highway~"^(path|track)$"][motorcycle~${V}];);out geom 5000;`;
-  const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql),
+  const r = await opFetch({ method:'POST', body:'data='+encodeURIComponent(ql),
     headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
   if (!r.ok) throw new Error('osm');
   const j = await r.json();
@@ -1764,32 +2144,35 @@ $('#legend').addEventListener('click', e => {
 
 /* ---------- live traffic (TomTom raster flow + incidents, user's own key) ---------- */
 const TT = { flow:null, inc:null, timer:null, sig:null, warned:false };
-const TT_COLORS = [['#2fbf4a','Free flow'],['#f7a21b','Slow'],['#e8382d','Heavy'],['#8b1a1a','Stopped']];
+const TT_COLORS = [['#f7a21b','Slow'],['#e8382d','Heavy'],['#8b1a1a','Stopped']];
 const trafficKey = () => String(store.get('ttkey', '') || '').trim();
+const mbTraffic = L.glLayer(() => ({
+  sources:[['gp-mbtraffic', { type:'vector', url:'mapbox://mapbox.mapbox-traffic-v1' }]],
+  layers:[{ id:'gp-mbtraffic', type:'line', source:'gp-mbtraffic', 'source-layer':'traffic',
+    filter:['in', ['get', 'congestion'], ['literal', ['moderate', 'heavy', 'severe']]],
+    layout:{ 'line-cap':'round', 'line-join':'round' },
+    paint:{ 'line-color':['match', ['get', 'congestion'], 'moderate', '#f7a21b', 'heavy', '#e8382d', 'severe', '#8b1a1a', '#2fbf4a'],
+      'line-width':['interpolate', ['linear'], ['zoom'], 8, 1.2, 13, 2.6, 17, 6], 'line-offset':['interpolate', ['linear'], ['zoom'], 10, .5, 17, 3], 'line-opacity':.95 } }]
+}), 300);
 function applyTraffic(){
-  const key = trafficKey(), on = !!(settings.ovTraffic && key);
-  const dark = (isDark() && baseKey === 'street') || baseKey === 'satellite';
-  const sig = on ? [key, dark, !!settings.trafficInc].join('|') : '';
-  if (sig === TT.sig) return renderTrafficKey();
-  TT.sig = sig;
-  if (TT.flow){ map.removeLayer(TT.flow); TT.flow = null; }
-  if (TT.inc){ map.removeLayer(TT.inc); TT.inc = null; }
-  clearInterval(TT.timer);
-  if (on){
-    const k = encodeURIComponent(key);
-    // {ts} changes every 2 minutes so redraw() fetches fresh tiles instead of cached ones.
-    const opt = { pane:'overTiles', maxZoom:19, opacity:.92, ts:() => Math.floor(Date.now() / 120000), attribution:'Traffic &copy; <a href="https://www.tomtom.com">TomTom</a>' };
-    TT.flow = L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/${dark ? 'relative0-dark' : 'relative0'}/{z}/{x}/{y}.png?key=${k}&thickness=8&ts={ts}`, opt).addTo(map);
-    TT.flow.on('tileerror', () => { if (!TT.warned){ TT.warned = true; toast('Traffic didn’t load. Check your TomTom key in Layers.', 5000); } });
-    TT.flow.on('tileload', () => { TT.warned = false; });
-    if (settings.trafficInc) TT.inc = L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/incidents/${dark ? 'night' : 's1'}/{z}/{x}/{y}.png?key=${k}&ts={ts}`, { ...opt, attribution:'' }).addTo(map);
-    TT.timer = setInterval(() => { if (document.visibilityState === 'visible'){ TT.flow?.redraw(); TT.inc?.redraw(); } }, 120000);
+  const key = trafficKey(), dark = (isDark() && baseKey === 'street') || baseKey === 'satellite';
+  if (settings.ovTraffic) map.addLayer(mbTraffic); else map.removeLayer(mbTraffic);
+  const sig = settings.ovTraffic && key && settings.trafficInc ? [key, dark].join('|') : '';
+  if (sig !== TT.sig){
+    TT.sig = sig;
+    if (TT.inc){ map.removeLayer(TT.inc); TT.inc = null; }
+    clearInterval(TT.timer);
+    if (sig){
+      TT.inc = L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/incidents/${dark ? 'night' : 's1'}/{z}/{x}/{y}.png?key=${encodeURIComponent(key)}&ts={ts}`,
+        { pane:'overTiles', maxZoom:19, ts:() => Math.floor(Date.now() / 120000), attribution:'Incidents &copy; TomTom' }).addTo(map);
+      TT.timer = setInterval(() => { if (document.visibilityState === 'visible') TT.inc?.redraw(); }, 120000);
+    }
   }
   renderTrafficKey();
 }
 function renderTrafficKey(){
   const el = $('#tkey');
-  if (!(settings.ovTraffic && trafficKey()) || S.nav){ el.hidden = true; return; }
+  if (!settings.ovTraffic || S.nav){ el.hidden = true; return; }
   el.innerHTML = '<span class="lg-t">Traffic</span>' + TT_COLORS.map(([c, l]) => `<span class="tk"><i style="background:${c}"></i>${l}</span>`).join('');
   el.hidden = false;
 }
@@ -1826,7 +2209,7 @@ async function searchCat(k){
   const ql = `[out:json][timeout:20];${C.q}(around:${C.r},${c[0].toFixed(5)},${c[1].toFixed(5)});out center tags 80;`;
   try{
     let r;
-    try{ r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }); }
+    try{ r = await opFetch({ method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }); }
     catch{ throw new Error('Could not reach the place search. Check your connection.'); }
     if (!r.ok) throw new Error('Place search returned '+r.status+'. Try again in a moment.');
     const j = await r.json();
@@ -1843,7 +2226,7 @@ async function searchCat(k){
       + (S.list.length ? `<ul class="list">${S.list.map((p, i) => row(p, 'res', i, `<span style="color:${C.color};display:grid">${C.svg}</span>`)).join('')}</ul>`
                        : '<p class="hint">Nothing found. Move the map somewhere else and try again.</p>'));
     if (S.list.length){
-      S.follow = false; $('#btnRecenter').hidden = !S.pos;
+      S.follow = false; $('#btnRecenter').hidden = !S.pos; northUp();
       map.fitBounds(L.latLngBounds(S.list.slice(0, 10).map(p => [p.lat, p.lng]).concat([c])),
         { paddingTopLeft:[30, $('#top').offsetHeight + 30], paddingBottomRight:[70, sheet.offsetHeight + 30], maxZoom:16 }); northUp();
     }
@@ -1901,10 +2284,44 @@ function saveGPX(){
 $('#recPill').onclick = recStop;
 
 /* ---------- routing engines: TomTom (live traffic) or OSRM ---------- */
+/* Mapbox Directions with live traffic: same response shape as OSRM, plus congestion and speed limits */
+async function fetchMapbox(from, to, alts){
+  const pts = [from, ...(S.stop ? [[S.stop.lat, S.stop.lng]] : []), to];
+  const ex = [settings.avoidTolls && 'toll', settings.avoidHighways && 'motorway', settings.avoidFerries && 'ferry', settings.avoidUnpaved && 'unpaved'].filter(Boolean);
+  const u = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${pts.map(p => p[1].toFixed(6)+','+p[0].toFixed(6)).join(';')}`
+    + `?alternatives=${alts && !S.stop ? 'true' : 'false'}&geometries=geojson&overview=full&steps=true&annotations=congestion,maxspeed`
+    + (ex.length ? '&exclude='+ex.join(',') : '') + `&access_token=${encodeURIComponent(MB_TOKEN)}`;
+  const r = await fetch(u);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.code !== 'Ok' || !j.routes?.length){
+    if (j.code === 'NoRoute' || j.code === 'NoSegment'){ const e = new Error('No drivable route to this place.'); e.noRoute = true; throw e; }
+    throw new Error('mapbox');
+  }
+  const LVL = { moderate:1, heavy:2, severe:3 };
+  return j.routes.map(rt => {
+    const R = prepRoute(rt);
+    R.engine = 'mapbox';
+    R.delay = rt.duration_typical ? Math.max(0, rt.duration - rt.duration_typical) : 0;
+    const cg = (rt.legs || []).flatMap(l => l.annotation?.congestion || []);
+    R.traffic = [];
+    for (let i = 0; i < cg.length;){
+      const m = LVL[cg[i]] || 0; let k = i + 1;
+      while (k < cg.length && (LVL[cg[k]] || 0) === m) k++;
+      if (m) R.traffic.push({ a:i, b:Math.min(k, R.coords.length - 1), mag:m, cat:'JAM', delay:0 });
+      i = k;
+    }
+    return R;
+  });
+}
 async function fetchRoutes(from, to, alts){
-  if (trafficKey() && settings.trafficRouting){
-    try{ return await fetchTomTom(from, to, alts); }
-    catch(e){ if (e.noRoute) throw e; toast('Traffic routing didn’t respond, so this route ignores traffic.', 4000); }
+  if (settings.trafficRouting){
+    try{ return await fetchMapbox(from, to, alts); }
+    catch(e){ if (e.noRoute) throw e; }
+    if (trafficKey()){
+      try{ return await fetchTomTom(from, to, alts); }
+      catch(e){ if (e.noRoute) throw e; }
+    }
+    toast('Live-traffic routing didn’t respond, so this route ignores traffic.', 4000);
   }
   return fetchOSRM(from, to, alts);
 }
@@ -1990,11 +2407,11 @@ function trafficSegs(R){
 let fasterT = null;
 function startFasterChecks(){
   clearInterval(fasterT);
-  if (S.nav?.route.engine !== 'tomtom') return;
+  if (!['tomtom', 'mapbox'].includes(S.nav?.route.engine)) return;
   fasterT = setInterval(async () => {
     const n = S.nav; if (!n || !S.pos || n.rerouting || S.sim || n.remT == null || n.remT < 300) return;
     try{
-      const [r] = await fetchTomTom(S.pos, S.dest.ll, false);
+      const [r] = await (S.nav.route.engine === 'mapbox' ? fetchMapbox : fetchTomTom)(S.pos, S.dest.ll, false);
       if (S.nav !== n) return;
       const save = n.remT - r.duration;
       if (save > Math.max(180, n.remT * .08)){
@@ -2049,7 +2466,7 @@ async function shareETA(){
 function renderTrip(){
   const n = S.nav; if (!n) return;
   const R = n.route, k = n.k || 0;
-  const delay = R.engine === 'tomtom' ? (R.delay > 60 ? `<span class="delay bad">+${fmtDur(R.delay)} traffic</span>` : '<span class="delay ok">Light traffic</span>') : '';
+  const delay = R.engine === 'tomtom' || R.engine === 'mapbox' ? (R.delay > 60 ? `<span class="delay bad">+${fmtDur(R.delay)} traffic</span>` : '<span class="delay ok">Light traffic</span>') : '';
   const items = R.steps.slice(k + 1).map((s, i) => {
     const idx = k + 1 + i, d = Math.max(0, R.stepStart[idx] - n.along);
     return `<li class="st"><span class="st-ico">${turnSVG(s)}</span><span class="row-txt"><b>${esc(instr(s))}</b></span><span class="row-d">${fd(d)}</span></li>`;
@@ -2077,18 +2494,17 @@ mSheet.addEventListener('click', e => {
 /* ---------- route options (avoid) ---------- */
 function renderRouteOpts(){
   openModal(`<h3 class="label" style="margin-top:0">Route options</h3>
-    ${trafficKey() ? tg('trafficRouting', 'Use live traffic', 'Route around jams with TomTom, and check for faster routes while you drive') :
-      '<p class="hint" style="margin-top:0">Add a TomTom key under Layers › Live traffic to route around traffic.</p>'}
+    ${tg('trafficRouting', 'Use live traffic', 'Route around jams with Mapbox, and check for faster routes while you drive')}
     ${tg('avoidTolls', 'Avoid tolls', 'Skip toll roads where there’s another way')}
     ${tg('avoidHighways', 'Avoid highways', 'Stay off motorways and freeways')}
     ${tg('avoidFerries', 'Avoid ferries', 'Never route onto a ferry')}
-    ${tg('avoidUnpaved', 'Avoid unpaved roads', trafficKey() && settings.trafficRouting ? 'Stay on paved roads' : 'Works only with live-traffic routing')}`);
+    ${tg('avoidUnpaved', 'Avoid unpaved roads', settings.trafficRouting ? 'Stay on paved roads' : 'Works only with live-traffic routing')}`);
   mSheet.dataset.view = 'routeopts';
 }
 
 /* ---------- weather: NEXRAD radar, NWS storm warnings, conditions ---------- */
-map.createPane('radar', map._rotatePane).style.zIndex = 240; map.getPane('radar').style.pointerEvents = 'none';
-map.createPane('warnings', map._rotatePane).style.zIndex = 395;
+map.createPane('radar').style.zIndex = 240; map.getPane('radar').style.pointerEvents = 'none';
+map.createPane('warnings').style.zIndex = 395;
 const RADAR = { layers:[], labels:[], timer:null, refresh:null, frame:0, sig:null, hold:0 };
 function applyRadar(){
   const sig = settings.ovRadar ? (settings.radarAnim ? 'anim' : 'still') : '';
@@ -2293,7 +2709,8 @@ if (SR){
 /* ---------- add a stop on the way ---------- */
 const STOP_CATS = { fuel:CATS.fuel, food:CATS.food,
   cafe:{ label:'Coffee', color:'#7b4a2e', q:'nwr[amenity=cafe]', svg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h13v5a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6zm13 1h1.5a2.5 2.5 0 0 1 0 5H17v-2h1.5a.5.5 0 0 0 0-1H17zM7 3c0 1.5 1.5 1.5 1.5 3M11 3c0 1.5 1.5 1.5 1.5 3" stroke="currentColor" stroke-width="1.4" fill-rule="evenodd"/></svg>' },
-  ev:CATS.ev, parking:CATS.parking };
+  ev:CATS.ev, parking:CATS.parking,
+  rest:{ label:'Rest area', color:'#4a6b8a', q:'nwr[highway~"^(rest_area|services)$"]', svg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 10h16v3H4zM6 13h2v7H6zM16 13h2v7h-2zM12 3l7 5H5z"/></svg>' } };
 let stopMarker = null;
 function drawStop(){
   if (stopMarker){ map.removeLayer(stopMarker); stopMarker = null; }
@@ -2317,7 +2734,7 @@ async function findStops(k){
   const box = $('#stopList'); box.innerHTML = '<p class="hint">Searching along your route…</p>';
   const ql = `[out:json][timeout:25];${C.q}(around:1200,${pts.map(p => p[0].toFixed(5)+','+p[1].toFixed(5)).join(',')});out center tags 80;`;
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    const r = await opFetch({ method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
     if (!r.ok) throw new Error();
     const j = await r.json();
     S.stopList = (j.elements || []).map(e => {
@@ -2459,7 +2876,7 @@ function fuelCost(m){
 }
 function routeExtra(r){
   const bits = [];
-  if (r.engine === 'tomtom') bits.push(`<span class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</span>`);
+  if (r.engine === 'tomtom' || r.engine === 'mapbox') bits.push(`<span class="delay ${r.delay > 60 ? 'bad' : 'ok'}">${r.delay > 60 ? '+'+fmtDur(r.delay)+' traffic' : 'Light traffic'}</span>`);
   const fc = fuelCost(r.distance); if (fc) bits.push(`<span>~${fc} fuel</span>`);
   return bits.length ? `<small class="rt-extra">${bits.join(' · ')}</small>` : '';
 }
@@ -2491,7 +2908,7 @@ async function loadCameras(R){
   const line = pts.map(p => p[0].toFixed(5)+','+p[1].toFixed(5)).join(',');
   if (settings.showSignals) loadSignals(R, line);
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+    const r = await opFetch({ method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
       body:'data='+encodeURIComponent(`[out:json][timeout:25];(node[highway=speed_camera](around:70,${line});node[enforcement~"^(maxspeed|traffic_signals)$"](around:70,${line}););out tags 400;`) });
     if (!r.ok || CAM.route !== R || !settings.camAlerts) return;
     const j = await r.json();
@@ -2554,28 +2971,11 @@ $('#hudv').addEventListener('click', e => {
   else hudClose();
 });
 
-/* ---------- 3D driving view (CSS perspective tilt while following during navigation) ---------- */
-const TILT = 46, PERSP = 1000, HORIZON = .2, CAR_AT = .76;   // degrees, px, horizon height, car height (fractions of screen)
+/* ---------- driving camera (Mapbox): heading-up bearing, 3D pitch, car low on screen ---------- */
 let is3D = false;
-function want3D(){ return !!(settings.view3d && S.nav && S.follow && !PLACE); }
-function apply3D(){
-  const w = want3D(); if (w === is3D) return;
-  is3D = w;
-  document.body.classList.toggle('three-d', w);
-  const a = $('#attr3d'); a.hidden = !w; if (w) a.innerHTML = map.attributionControl?.getContainer()?.innerHTML || '© OpenStreetMap contributors';
-  map.invalidateSize({ pan:false });
-  if (S.pos && S.follow) followCam();
-}
-// Pixels the car should sit below the map container's centre so it lands at CAR_AT of the screen after the tilt.
-function carOffsetPx(){
-  const ch = map.getSize().y;
-  if (!is3D) return S.nav ? ch * .22 : 0;
-  const H = window.innerHeight, th = rad(TILT), oy = HORIZON * H, target = CAR_AT * H;
-  const scr = d => oy + (H - d * Math.cos(th) - oy) * PERSP / (PERSP + d * Math.sin(th));
-  let lo = 0, hi = ch;
-  for (let i = 0; i < 28; i++){ const m = (lo + hi) / 2; if (scr(m) > target) lo = m; else hi = m; }
-  return ch / 2 - (lo + hi) / 2;
-}
+function want3D(){ return !!(settings.view3d && S.nav); }
+function apply3D(){ is3D = want3D() && S.follow; if (S.pos && S.follow) followCam(600); }
+function layoutView(){ apply3D(); }
 
 /* ---------- alternate routes while driving ---------- */
 const altLayer = L.layerGroup().addTo(map);
@@ -2613,7 +3013,7 @@ async function showDestParking(){
   mSheet.dataset.view = 'dpark';
   const ql = `[out:json][timeout:20];nwr[amenity=parking][access!~"^(private|no|customers)$"](around:800,${d.lat.toFixed(5)},${d.lng.toFixed(5)});out center tags 40;`;
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    const r = await opFetch({ method:'POST', body:'data='+encodeURIComponent(ql), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
     if (!r.ok) throw new Error();
     const j = await r.json();
     S.dParks = (j.elements || []).map(e => {
@@ -2683,7 +3083,7 @@ const sigIcon = L.divIcon({ className:'sig', iconSize:[16,30], iconAnchor:[8,28]
 async function loadSignals(R, line){
   SIG.layer.clearLayers();
   try{
-    const r = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+    const r = await opFetch({ method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
       body:'data='+encodeURIComponent(`[out:json][timeout:25];node[highway=traffic_signals](around:25,${line});out 1500;`) });
     if (!r.ok || CAM.route !== R) return;
     const j = await r.json(), kept = [];
