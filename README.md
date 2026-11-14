@@ -498,6 +498,10 @@ body:not(.navigating) .nav-only{display:none}
 
 body.navigating .car-rot{width:58px;height:58px;margin:-7px}
 
+body.navigating #alt,body.navigating #wx{display:none!important}
+#hud,#fabs{margin-bottom:28px}
+.mapboxgl-ctrl-bottom-left .mapboxgl-ctrl,.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl{margin-bottom:4px}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -650,6 +654,7 @@ const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', bas
   orient:'heading', useCompass:false, speedAlert:true,
   camAlerts:true, view3d:true, showSignals:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
+if (!store.get('orientV2', false)){ settings.orient = 'heading'; store.set('orientV2', true); saveSettings(); }   // turn heading-up back on once after the Mapbox switch
 const mq = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => {
   if (settings.theme === 'sun'){ const p = S.pos || [map.getCenter().lat, map.getCenter().lng]; return sunAlt(p[0], p[1]) < -2; }
@@ -703,7 +708,11 @@ const L = (() => {
   };
 
   /* layer ordering among our own GL layers; everything below the style's labels unless z >= 500 */
-  function labelLayer(){ const ls = mb.getStyle()?.layers || []; return ls.find(l => l.type === 'symbol')?.id; }
+  function labelLayer(){
+    const ls = (mb.getStyle()?.layers || []).filter(l => !String(l.id).startsWith('gp-'));
+    let last = -1; ls.forEach((l, i) => { if (l.type !== 'symbol' && l.type !== 'fill-extrusion') last = i; });
+    return ls.slice(last + 1).find(l => l.type === 'symbol')?.id;     // first label above every road, bridge and tunnel
+  }
   function beforeFor(z){
     const next = GL.order.filter(o => o.z > z && mb.getLayer(o.id)).sort((a, b) => a.z - b.z)[0];
     if (next) return next.id;
@@ -1092,9 +1101,15 @@ function drawCar(){
     carMarker = L.marker(S.pos, { icon:carIcon, interactive:false, zIndexOffset:1000, alignMap:true }).addTo(map);
     accCircle = L.circle(S.pos, { radius:S.acc || 10, stroke:false, fillColor:css('--route'), fillOpacity:.1, interactive:false }).addTo(map);
   }
-  carMarker.setLatLng(S.pos); accCircle.setLatLng(S.pos).setRadius(Math.min(S.acc || 10, 500));
+  // Glide from where the arrow is to the new spot over about one GPS interval instead of jumping.
+  const cur = carMarker.getLatLng(), to = S.show || S.pos;
+  CAR.from = [cur.lat, cur.lng]; CAR.to = to; CAR.t0 = performance.now(); CAR.dur = S.sim ? 480 : 950;
+  if (dist(CAR.from, to) > 300) CAR.from = to;                       // big jump (first fix, reroute): don't slide across town
+  accCircle.setLatLng(to).setRadius(Math.min(S.acc || 10, 500));
+  accCircle.options.fillOpacity = S.nav && S.snapped ? 0 : .1;
   rotateCar();
 }
+const CAR = { from:null, to:null, t0:0, dur:950 };
 /* ---------- map rotation, car arrow and compass: one rAF loop, frame-rate independent ---------- */
 // Heading-up: Mapbox turns the map so your direction of travel points up (see followCam).
 // The car arrow eases toward the newest heading each frame: compass ~45 ms, GPS ~300 ms.
@@ -1123,6 +1138,11 @@ function animFrame(t){
   const dt = Math.min(.1, Math.max(0, (t - animLast) / 1000)); animLast = t;
   let busy = false;
   const b = bearingNow();
+  if (CAR.to && carMarker){
+    const f = Math.min(1, (t - CAR.t0) / CAR.dur);
+    carMarker.setLatLng([CAR.from[0] + (CAR.to[0] - CAR.from[0]) * f, CAR.from[1] + (CAR.to[1] - CAR.from[1]) * f]);
+    if (f < 1) busy = true; else CAR.to = null;
+  }
   const carEl = carMarker?.getElement()?.querySelector('.car-rot');
   if (carEl){
     const d = wrap(S.heading - carRot);
@@ -1188,20 +1208,41 @@ $('#btnCompass').onclick = () => {
   toast(headingUp() ? 'Map turns with you' : 'North up', 1500);
 };
 function onPosition(c){
-  const ll = [c.latitude, c.longitude], prev = S.pos, now = Date.now();
-  let spd = (typeof c.speed === 'number' && !isNaN(c.speed)) ? c.speed : null;
+  const raw = [c.latitude, c.longitude], prev = S.pos, now = Date.now(), acc = c.accuracy || 0;
+  // 1) Drop poor fixes (cell/Wi-Fi guesses, 65 m+) while recent good ones exist.
+  if (prev && !S.sim && acc > 65 && now - (S.lastGood || 0) < 15000) return;
+  if (acc <= 65) S.lastGood = now;
+  let spd = (typeof c.speed === 'number' && !isNaN(c.speed) && c.speed >= 0) ? c.speed : null;
+  let ll = raw;
   if (prev){
-    const d = dist(prev, ll);
+    const d = dist(prev, raw);
     if (spd == null && S.lastFix) spd = d / Math.max(.5, (now - S.lastFix)/1000);
-    if (d > 2 && !(CMP.on && CMP.raw != null && (spd || 0) < CMP_SPEED)) S.heading =(typeof c.heading === 'number' && !isNaN(c.heading) && (spd||0) > 1) ? c.heading : bearing(prev, ll);
+    if (!S.sim){
+      // 2) Standing still: GPS wanders a few metres around you, so hold the dot.
+      if ((spd ?? 0) < .8 && d < Math.max(6, acc * .7)) ll = prev;
+      // 3) Walking pace / creeping in traffic: blend toward the new fix to soften jumps.
+      else if ((spd ?? 0) < 4) ll = [prev[0] + (raw[0] - prev[0]) * .6, prev[1] + (raw[1] - prev[1]) * .6];
+    }
+    const moved = dist(prev, ll);
+    // 4) Heading only from real movement: the GPS course when above ~4.5 mph, else the direction actually travelled.
+    if (!(CMP.on && CMP.raw != null && (spd || 0) < CMP_SPEED)){
+      if ((spd || 0) > 2 && typeof c.heading === 'number' && !isNaN(c.heading) && c.heading >= 0) S.heading = c.heading;
+      else if (moved > 8) S.heading = bearing(prev, ll);
+    }
   }
-  S.pos = ll; S.acc = c.accuracy; S.speed = spd || 0; S.lastFix = now;
+  S.pos = ll; S.acc = acc; S.speed = spd || 0; S.lastFix = now;
   S.alt = (typeof c.altitude === 'number' && !isNaN(c.altitude)) ? c.altitude : null;
-  drawCar(); updateSpeedo(); updateAlt(); checkReports(); maybeSpeedLimit();
+  updateSpeedo(); updateAlt(); checkReports(); maybeSpeedLimit();
   if (REC.on && (S.sim || (c.accuracy || 0) <= 50)) recPoint(ll, S.alt);
   if (PLACE) plSub();
   checkWx(); refreshConditions();
   if (S.nav) navTick();
+  // 5) While navigating, lock the arrow onto the route line when the fix is close to it (map matching).
+  const n = S.nav;
+  S.snapped = !!(n && n.snapPt && !n.off && n.snapD < Math.max(30, acc * 1.2));
+  S.show = S.snapped ? n.snapPt : S.pos;
+  if (S.snapped && n.routeBrg != null && S.speed > 1.5) S.heading = n.routeBrg;
+  drawCar();
   if (!S.firstFix){ S.firstFix = true; if (!S.nav && !S.dest) followCam(900); kickAnim(); }
   else if (S.follow && (S.nav || !S.dest)) followCam();
 }
@@ -1219,9 +1260,9 @@ function followCam(dur){
   const turning = headingUp() && (S.nav || !S.dest);
   if (turning) S.mapHdg = mapHeading();
   const H = map.getSize().y, navH = S.nav ? $('#navbar').offsetHeight : 0;
-  const z = S.nav ? (S.speed > 24 ? 15.2 : S.speed > 12 ? 16 : 16.8) + (is3D ? .4 : 0) : Math.max(map.getZoom(), 15.5);
-  map.camera({ center:S.pos, zoom:z, bearing:turning ? S.mapHdg : 0, pitch:is3D ? 60 : 0,
-    padding:{ top:S.nav ? Math.round(H * (is3D ? .48 : .34)) : 0, bottom:navH, left:0, right:0 }, duration:dur ?? 1000 });
+  const z = S.nav ? (S.speed > 24 ? 16.6 : S.speed > 12 ? 17.3 : 18) : Math.max(map.getZoom(), 15.5);
+  map.camera({ center:S.show || S.pos, zoom:z, bearing:turning ? S.mapHdg : 0, pitch:is3D ? 60 : 0,
+    padding:{ top:S.nav ? Math.round(H * (is3D ? .42 : .34)) : 0, bottom:navH, left:0, right:0 }, duration:dur ?? 1000 });
 }
 function destPoint(p, brg, m){
   const d = m / R_E, b = rad(brg), la = rad(p[0]), lo = rad(p[1]);
@@ -1597,6 +1638,7 @@ function stepAt(R, along){ let k = 0; while (k+1 < R.stepStart.length && R.stepS
 function navTick(){
   const n = S.nav, R = n.route;
   const s = snap(R, S.pos, n.along - 150);
+  n.snapPt = s.pt; n.snapD = s.d;
   if (s.d > Math.max(45, (S.acc || 0)*1.3)){ if (++n.off >= 3) reroute(); } else n.off = 0;
   n.along = s.along;
   const k = stepAt(R, s.along); n.k = k;
