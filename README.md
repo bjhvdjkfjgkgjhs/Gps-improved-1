@@ -502,6 +502,20 @@ body.navigating #alt,body.navigating #wx{display:none!important}
 #hud,#fabs{margin-bottom:28px}
 .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl,.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl{margin-bottom:4px}
 
+/* ===== Waze driving layout ===== */
+body.navigating #btnLayers,body.navigating #cmpTxt{display:none}
+body.navigating #fabs{top:calc(var(--topH, 0px) + 12px);bottom:auto;flex-direction:row-reverse;align-items:center;margin:0;gap:10px}
+body.navigating #fabs .fab:not(.fab-warn){background:#0b0d0f;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+body.navigating #fabs .compass{width:56px;height:56px}
+body.navigating #btnReport{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:auto;bottom:calc(var(--bottom) + 40px);width:64px;height:64px;border-radius:18px;background:#ffc20e;color:#1a1a1a}
+@media (orientation: landscape) and (max-height: 600px){ body.navigating #fabs{top:calc(env(safe-area-inset-top,0px) + 10px)} }
+#banner .bt-and{font:800 17px var(--font);color:var(--wz);flex:none}
+#banner .b-icon{width:64px;height:64px}
+#banner .lane{height:42px;max-width:64px}
+#banner .lane svg{width:28px;height:38px}
+.car .halo{fill:#9aa7b4;opacity:.22}
+body.navigating .car-rot{width:64px;height:64px;margin:-10px}
+
 #toast{position:fixed;z-index:900;left:50%;top:calc(env(safe-area-inset-top,0px) + 76px);transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;transition:opacity .25s}
 #toast.nav{top:calc(env(safe-area-inset-top,0px) + 150px)}
 @media (prefers-reduced-motion: reduce){.car-rot,#hud,#fabs,.leaflet-bottom{transition:none}.limit.over{animation:none}}
@@ -652,7 +666,7 @@ const settings = Object.assign({ units:'imperial', voice:true, theme:'auto', bas
   srcOsm:true, srcUsfs:true, srcBlm:true, legendOpen:true, ovTraffic:false, trafficInc:true,
   trafficRouting:true, avoidTolls:false, avoidHighways:false, avoidFerries:false, avoidUnpaved:false, ovRadar:false, radarAnim:true, ovWarnings:true,
   orient:'heading', useCompass:false, speedAlert:true,
-  camAlerts:true, view3d:true, showSignals:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
+  camAlerts:true, view3d:true, buildings3d:false, showSignals:true, mpg:28, priceGal:3.1, l100:8, priceL:1.8, currency:'$', hudMirror:true }, store.get('settings', {}));
 const saveSettings = () => store.set('settings', settings);
 if (!store.get('orientV2', false)){ settings.orient = 'heading'; store.set('orientV2', true); saveSettings(); }   // turn heading-up back on once after the Mapbox switch
 const mq = matchMedia('(prefers-color-scheme: dark)');
@@ -896,6 +910,7 @@ const L = (() => {
       this.attributionControl = { getContainer:() => mb.getContainer().querySelector('.mapboxgl-ctrl-attrib-inner') };
       mb.on('style.load', () => {
         GL.ready = true; GL.order = [];
+        try{ this.fire('stylebase', { mb }); }catch(e){ console.warn('style', e); }
         const items = [...GL.items].sort((a, b) => a.z - b.z);
         items.forEach(it => { try{ it.attach(); }catch(e){ console.warn('layer', e); } });
         this.fire('styleload');
@@ -1091,6 +1106,7 @@ const ro = new ResizeObserver(() => {
   document.documentElement.style.setProperty('--bottom', (el.hidden ? 0 : el.offsetHeight)+'px');
 });
 ro.observe($('#sheet')); ro.observe($('#navbar')); ro.observe($('#place'));
+new ResizeObserver(() => document.documentElement.style.setProperty('--topH', $('#top').offsetHeight+'px')).observe($('#top'));
 
 /* ---------- position & GPS ---------- */
 const carIcon = L.divIcon({ className:'car', iconSize:[44,44], iconAnchor:[22,22],
@@ -1261,7 +1277,7 @@ function followCam(dur){
   if (turning) S.mapHdg = mapHeading();
   const H = map.getSize().y, navH = S.nav ? $('#navbar').offsetHeight : 0;
   const z = S.nav ? (S.speed > 24 ? 16.6 : S.speed > 12 ? 17.3 : 18) : Math.max(map.getZoom(), 15.5);
-  map.camera({ center:S.show || S.pos, zoom:z, bearing:turning ? S.mapHdg : 0, pitch:is3D ? 60 : 0,
+  map.camera({ center:S.show || S.pos, zoom:z, bearing:turning ? S.mapHdg : 0, pitch:is3D ? 52 : 0,
     padding:{ top:S.nav ? Math.round(H * (is3D ? .42 : .34)) : 0, bottom:navH, left:0, right:0 }, duration:dur ?? 1000 });
 }
 function destPoint(p, brg, m){
@@ -1278,7 +1294,7 @@ function updateSpeedo(){
   const v = speedDisp(S.speed);
   $('#spd').textContent = v; $('#spdU').textContent = imperial() ? 'mph' : 'km/h';
   const lim = $('#limit');
-  if (S.limitKmh == null){ lim.hidden = !S.pos; lim.classList.add('unk'); lim.classList.remove('est', 'over'); lim.classList.toggle('metric', !imperial()); $('#limitVal').textContent = '–'; lim.title = 'Looking up the speed limit'; $('#speedo').classList.remove('over'); renderSpeedRing(v, 0, false); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
+  if (S.limitKmh == null){ lim.hidden = true; lim.classList.add('unk'); lim.classList.remove('est', 'over'); lim.classList.toggle('metric', !imperial()); $('#limitVal').textContent = '–'; lim.title = 'Looking up the speed limit'; $('#speedo').classList.remove('over'); renderSpeedRing(v, 0, false); if (!$('#hudv').hidden){ $('#hSpd').textContent = v; $('#hSpdU').textContent = imperial() ? 'mph' : 'km/h'; } return; }
   const lv = imperial() ? Math.round(S.limitKmh/1.609344/5)*5 : Math.round(S.limitKmh);
   lim.hidden = false; lim.classList.remove('unk'); lim.classList.toggle('metric', !imperial()); lim.classList.toggle('est', !!S.limitEst);
   lim.title = S.limitEst ? 'Estimated from the road type. No posted limit is mapped here.' : 'Posted speed limit';
@@ -1606,6 +1622,7 @@ function startNav(simulate){
   else renderNav(Math.min(1, route.steps.length-1), route.stepStart[1] ?? route.total, route.total, route.duration);
   if (S.pos) followCam(); else map.setView(route.coords[0], 17);
   startFasterChecks(); checkWx(true);
+  if (S.pos && !simulate && dist(S.pos, route.coords[0]) > 60) reroute(true);   // you moved since the route was planned
 }
 function drawNavRoute(){
   if (CAM.route !== S.nav.route){ CAM.route = S.nav.route; loadCameras(S.nav.route); }
@@ -1639,7 +1656,7 @@ function navTick(){
   const n = S.nav, R = n.route;
   const s = snap(R, S.pos, n.along - 150);
   n.snapPt = s.pt; n.snapD = s.d;
-  if (s.d > Math.max(45, (S.acc || 0)*1.3)){ if (++n.off >= 3) reroute(); } else n.off = 0;
+  if (s.d > Math.max(40, (S.acc || 0)*1.3)){ if (++n.off >= 2) reroute(); } else n.off = 0;
   n.along = s.along;
   const k = stepAt(R, s.along); n.k = k;
   const last = R.steps.length - 1, next = Math.min(k+1, last);
@@ -1668,7 +1685,8 @@ function renderNav(k, toNext, remD, remT){
   $('#bStreet').innerHTML = S.nav.rerouting ? 'Rerouting…' : stepLabelHTML(step);
   $('#bStreet').setAttribute('aria-label', instr(step));
   const nxt = R.steps[k+1];
-  if (nxt){ $('#bThen').hidden = false; $('#bThen').innerHTML = `<span class="bt-i">${turnSVG(nxt)}</span><span class="bt-l">${stepLabelHTML(nxt)}</span>`; }
+  if (nxt){ $('#bThen').hidden = false; const nl = stepLabelHTML(nxt);
+    $('#bThen').innerHTML = `<span class="bt-and">and then</span><span class="bt-i">${turnSVG(nxt)}</span>${nxt.maneuver.type === 'arrive' || /^(Continue|Keep|Turn|Head|Make|Take|Merge|Go|Exit|At)/.test(nl) ? '' : `<span class="bt-l">${nl}</span>`}`; }
   else $('#bThen').hidden = true;
   const rn = roadNowHTML(), pill = $('#streetPill'); pill.hidden = !rn; if (rn && pill.innerHTML !== rn) pill.innerHTML = rn;
   renderLanes(step, toNext);
@@ -1858,7 +1876,8 @@ function renderLayers(){
     <div class="set-row"><span>Map direction</span>${seg('orient', [['heading','Turns with you'],['north','North up']])}</div>
     ${tg('useCompass', 'Phone compass', 'Point the arrow, and the map, the way your phone faces when you’re stopped')}
     ${tg('speedAlert', 'Speeding chime', 'Play a tone when you go over the speed limit')}
-    ${tg('view3d', '3D driving view', 'Tilt the map toward the horizon while you navigate')}
+    ${tg('view3d', 'Tilted driving view', 'Tilt the map toward the horizon while you navigate')}
+    ${tg('buildings3d', '3D buildings', 'Raise buildings in 3D when the map is tilted')}
     ${tg('showSignals', 'Traffic lights on route', 'Show traffic signals along your route while navigating')}
     ${tg('camAlerts', 'Speed camera alerts', 'Warn before speed and red light cameras mapped on OpenStreetMap')}
     <div class="set-row"><span>Mapbox token</span><div class="keyin"><input id="mbTok2" type="password" autocomplete="off" spellcheck="false" value="${esc(MB_TOKEN)}"><button class="btn" data-mbsave>Save</button></div></div>
@@ -1877,7 +1896,8 @@ mSheet.addEventListener('click', e => {
   if (b.dataset.base){ settings.base = b.dataset.base; saveSettings(); applyTheme(); renderLayers(); return; }
   if (b.dataset.tg){ const k = b.dataset.tg; settings[k] = !settings[k]; saveSettings(); if (k.startsWith('src')) resetTrails();
     if (k === 'useCompass'){ settings[k] ? compassOn() : compassOff(); }
-    if (k === 'view3d'){ map.removeLayer(buildings3d); map.addLayer(buildings3d); apply3D(); }
+    if (k === 'view3d') apply3D();
+    if (k === 'buildings3d'){ map.removeLayer(buildings3d); map.addLayer(buildings3d); }
     if (/^(avoid|trafficRouting)/.test(k)) S.routesStale = true;
     applyOverlays(); rerenderModal(); return; }
   if (b.dataset.tool === 'park'){ askPark(); return; }
@@ -1950,9 +1970,36 @@ function setBase(){
   baseKey = key;
   map.setStyle(MB_STYLES[key](isDark()));
 }
+/* ---------- Waze look for the street map: recolor Mapbox's navigation style in place ----------
+   Hollow light-outlined streets on a dark navy ground, olive highways, flat buildings, quiet labels,
+   and the style's own green/teal traffic coloring switched off (our traffic layer shows only slowdowns). */
+function wazeStyle(mbm){
+  if (baseKey !== 'street') return;
+  const dark = isDark();
+  const P = dark
+    ? { bg:'#232a37', water:'#1e3a63', park:'#1f3b2c', bld:'#2c3545', fill:'#2a3242', cas:'#55657d', maj:'#6a7b95', hwy:'#a5a23c', hwyCas:'#7d7a2b', txt:'#cfd8e3', halo:'#1a2029' }
+    : { bg:'#eceee8', water:'#a9cff3', park:'#cde6c2', bld:'#dedbd5', fill:'#ffffff', cas:'#c2c7ce', maj:'#ffffff', hwy:'#f3d35c', hwyCas:'#d3ad36', txt:'#38414b', halo:'#ffffff' };
+  const set = (id, k, v) => { try{ mbm.setPaintProperty(id, k, v); }catch{} };
+  for (const l of mbm.getStyle()?.layers || []){
+    const id = l.id; if (id.startsWith('gp-')) continue;
+    const src = String(mbm.getStyle().sources?.[l.source]?.url || '');
+    if (/traffic/i.test(id) || /traffic/.test(src)){ try{ mbm.setLayoutProperty(id, 'visibility', 'none'); }catch{} continue; }
+    if (l.type === 'background') set(id, 'background-color', P.bg);
+    else if (l.type === 'fill' && /water/.test(id)) set(id, 'fill-color', P.water);
+    else if (l.type === 'fill' && /park|wood|grass|golf|pitch|cemetery/.test(id)) set(id, 'fill-color', P.park);
+    else if (l.type === 'fill' && /building/.test(id)){ set(id, 'fill-color', P.bld); set(id, 'fill-outline-color', P.bld); }
+    else if (l.type === 'fill-extrusion'){ try{ mbm.setLayoutProperty(id, 'visibility', 'none'); }catch{} }
+    else if (l.type === 'line' && /road|bridge|tunnel|street/.test(id) && !/label|shield|rail|path|pedestrian|steps|ferry|construction|oneway|arrow/.test(id)){
+      const hw = /motorway|trunk/.test(id), cas = /case|casing|outline/.test(id), major = /primary|secondary/.test(id);
+      set(id, 'line-color', hw ? (cas ? P.hwyCas : P.hwy) : cas ? (major ? P.maj : P.cas) : P.fill);
+    }
+    else if (l.type === 'symbol' && l.layout?.['text-field'] && !/shield/.test(id)){ set(id, 'text-color', P.txt); set(id, 'text-halo-color', P.halo); }
+  }
+}
+map.on('stylebase', e => wazeStyle(e.mb));
 /* 3D buildings, drawn from the style's own building data */
 const buildings3d = L.glLayer(mbm => {
-  if (!mbm.getSource('composite') || !settings.view3d) return null;
+  if (!mbm.getSource('composite') || !settings.buildings3d) return null;
   const dark = isDark() && baseKey !== 'satellite';
   return { layers:[{ id:'gp-buildings', type:'fill-extrusion', source:'composite', 'source-layer':'building', minzoom:14.5,
     filter:['==', ['get', 'extrude'], 'true'],
@@ -2516,7 +2563,7 @@ function renderTrip(){
   openModal(`<div class="trip-head"><div><b>${n.remT != null ? clock(n.remT) : '--'}</b><span>arrival</span></div>
       <div><b>${n.remT != null ? fmtDur(n.remT) : '--'}</b><span>${n.remD != null ? fd(n.remD) : ''}</span></div>${delay}</div>
     <div class="pv-actions three"><button class="btn primary" data-trip="share">Share ETA</button><button class="btn" data-trip="stop">${S.stop ? 'Change stop' : 'Add stop'}</button><button class="btn" data-trip="overview">Overview</button></div>
-    <div class="trip-links"><button class="link" data-trip="hud">Windshield HUD</button><button class="btn danger" data-trip="end">End drive</button></div>
+    <div class="trip-links"><button class="link" data-trip="hud">Windshield HUD</button><button class="link" data-trip="layers">Map &amp; settings</button><button class="btn danger" data-trip="end">End drive</button></div>
     ${CAM.list.length ? `<p class="hint">${CAM.list.filter(c => c.along > n.along).length} speed or red light cameras on this route</p>` : ''}
     ${S.stop ? `<p class="hint">Stop: <b>${esc(S.stop.name)}</b></p>` : ''}
     ${wxRouteHTML(R)}
@@ -2529,6 +2576,7 @@ mSheet.addEventListener('click', e => {
   if (b.dataset.trip === 'share') shareETA();
   if (b.dataset.trip === 'stop') renderAddStop();
   if (b.dataset.trip === 'hud') hudOpen();
+  if (b.dataset.trip === 'layers') renderLayers();
   if (b.dataset.trip === 'end'){ closeModal(); $('#btnEnd').click(); }
   if (b.dataset.trip === 'overview'){ closeModal(); $('#btnOverview').click(); }
 });
